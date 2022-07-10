@@ -10,10 +10,12 @@ money - normalized by basic unit cost (money/cost_of_basic_unit)
 xp - can upgrade age or not
 player age - one hot encoded
 can activate ability - 0 to 1 cooldown
-my troops on ground -  number from memory 
-how far the battle/ some information about enemy troops and distance to base my base
-n troops in training - calculated while playing
-number of available cannon slots - calculated while playing
+my troops on ground 
+enemy troops on ground 
+where is the current battle taking place(0-100 your base to enemy base)
+number of troops in training 
+number of available cannon slots
+(more specific troop type?)
 array with cannon and cannon age (max 4) - calculated while playing
 
 

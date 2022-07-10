@@ -1,8 +1,11 @@
 import numpy as np
 import cv2
+import pyautogui
 
 class GameVision(object):
-    
+
+    env = None
+
     def __init__(self) -> None:
         pass
     
@@ -42,13 +45,24 @@ class GameVision(object):
         # cv2.waitKey(0)
         # cv2.destroyAllWindows())
 
-    @staticmethod
-    def test():
+    def scan_money(self):
         pass
 
-import pyautogui
-import cv2
-import numpy as np
+    def scan_xp(self):
+        pass
+
+    def scan_player_heath(self):
+        pass
+    
+    def scan_enemy_health(self):
+        pass
+
+    def scan_enemy_age(self):
+        pass
+
+    def scan_enemy_troops(self):
+        pass
+
 
 class WindowManagement(object):
 
@@ -62,12 +76,16 @@ class WindowManagement(object):
         window.maximize()
         window.resize(-window.size[0]+1800,-window.size[1]+600)
 
+    def visualize_image(img):
+        cv2.imshow("img", img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
     def screenshoot(self):
         im = pyautogui.screenshot(region=(0,45,1700,525))
         opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
-        cv2.imshow("img", opencvImage)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        
+
 
 if __name__ == "__main__":
     obj = WindowManagement()
