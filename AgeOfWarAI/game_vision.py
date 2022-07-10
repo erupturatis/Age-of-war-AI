@@ -46,6 +46,29 @@ class GameVision(object):
     def test():
         pass
 
+import pyautogui
+import cv2
+import numpy as np
+
+class WindowManagement(object):
+
+    def __init__(self) -> None:
+        pass
+
+    def initial_setup(self):
+        a = pyautogui.getWindowsWithTitle("Adobe Flash Player 13")
+        window = a[0]
+        window.move(-window.left, -window.top)
+        window.maximize()
+        window.resize(-window.size[0]+1800,-window.size[1]+600)
+
+    def screenshoot(self):
+        im = pyautogui.screenshot(region=(0,45,1700,525))
+        opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
+        cv2.imshow("img", opencvImage)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
 if __name__ == "__main__":
-    obj = GameVision()
-    obj("battle_position")
+    obj = WindowManagement()
+    obj.screenshoot()
