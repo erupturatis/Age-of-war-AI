@@ -22,9 +22,10 @@ class GameVision(object):
         }
         return dict[args[0]](args[1:])
 
-    def battle(self, *args):
+    def scan_battle(self, *args):
         # game input
-        img = self.screenshoot 
+        img = cv2.imread('AgeOfWarAI/assets/environment/test2.png') # change
+        img = img[600:-100,875:-250]
         # standard coin identifier
         template = cv2.imread('AgeOfWarAI/assets/misc/coin.png')
         h, w, c = template.shape
@@ -38,7 +39,13 @@ class GameVision(object):
         location = min_loc
         bottom_right = (location[0] + w, location[1] + h)   
         # location of best match
-        if min_val > .01:
+
+        cv2.rectangle(img, location, bottom_right, 255, 5)
+        cv2.imshow('Match', img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        print(min_val)
+        if min_val > .05:
             # didn't found any coin
             return None
         else:
@@ -47,10 +54,7 @@ class GameVision(object):
             return bottom_right[0] / w_img
 
 
-        # cv2.rectangle(img2, location, bottom_right, 255, 5)
-        # cv2.imshow('Match', img2)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows())
+        
 
     def analyzie_image(self, img):
         #img = cv2.imread("AgeOfWarAI/assets/game2.png")
@@ -74,7 +78,7 @@ class GameVision(object):
 
     def scan_money_and_xp(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
-        img = cv2.imread('AgeOfWarAI/assets/test1.png') # screenshot
+        img = cv2.imread('AgeOfWarAI/assets/test1.png') # change
         result = self.get_position(img=img, template=template, treshold=0.95)
         if len(result)==0:
             raise("Didn't find any match coin and exp scan money function")
@@ -162,7 +166,7 @@ class GameVision(object):
     
     def initial_scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
-        img = cv2.imread('AgeOfWarAI/assets/game2.png') # screenshot
+        img = cv2.imread('AgeOfWarAI/assets/game2.png') # change
 
         positions = self.get_position(img, template, 0.95)
         positions.sort()
@@ -181,7 +185,7 @@ class GameVision(object):
 
     def scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
-        img = cv2.imread('AgeOfWarAI/assets/game6.png') # screenshot
+        img = cv2.imread('AgeOfWarAI/assets/game6.png') # change
         # I am adding an offset to eliminate some potentially hazardous values
         top_left = (5 + self.player_health_position[0],self.player_health_position[1])
         bottom_right = (-5 + self.player_health_position[0] + template.shape[1],self.player_health_position[1]+ template.shape[0])
@@ -237,7 +241,7 @@ class GameVision(object):
         
         def first_age():
             #gets clubman and slinger together
-            img = cv2.imread('AgeOfWarAI/assets/game1.png')
+            img = cv2.imread('AgeOfWarAI/assets/game1.png') # change
             template = cv2.imread('AgeOfWarAI/assets/enemy/clubman6.png')
             threshold = 0.65
 
@@ -305,7 +309,7 @@ if __name__ == "__main__":
     obj1.initial_setup()
     #obj1.screenshot()
     obj = GameVision()
-    a = obj.scan_money()
+    a = obj.scan_battle()
     print(a)
 
     pass

@@ -2,6 +2,7 @@
 class Env(object):
     
     age = 1
+    ability_cooldown = 0
 
     def __init__(self) -> None:
         pass
@@ -57,5 +58,9 @@ class Env(object):
     def sell_turret4(self):
         pass
 
-    
+    def get_inputs(self):
+        pass
+
+    def take_action(self):
+        pass
     
