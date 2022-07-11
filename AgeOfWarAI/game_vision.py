@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import pyautogui
+from PIL import Image, ImageOps, ImageFilter
 from pytesseract import pytesseract
 from pytesseract import Output
 
@@ -25,7 +26,7 @@ class GameVision(object):
         # game input
         img = self.screenshoot 
         # standard coin identifier
-        template = cv2.imread('AgeOfWarAI/assets/coin.png')
+        template = cv2.imread('AgeOfWarAI/assets/misc/coin.png')
         h, w, c = template.shape
         h_img, w_img, c_img = img.shape
         # image dimensions
@@ -52,10 +53,10 @@ class GameVision(object):
         # cv2.destroyAllWindows())
 
     def analyzie_image(self, img):
-        img = cv2.imread("AgeOfWarAI/assets/game2.png")
+        #img = cv2.imread("AgeOfWarAI/assets/game2.png")
         pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-        image_data = pytesseract.image_to_data(img, output_type=Output.DICT)
-        print(image_data)
+        image_data = pytesseract.image_to_string(img, output_type=Output.DICT)
+        return image_data
 
     def get_position(self, img, template, treshold):
        
@@ -69,14 +70,98 @@ class GameVision(object):
         locations = list(zip(*locations[::-1]))
         return locations
 
-    def scan_money(self):
-        pass
+
+
+    def scan_money_and_xp(self):
+        template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
+        img = cv2.imread('AgeOfWarAI/assets/test1.png') # screenshot
+        result = self.get_position(img=img, template=template, treshold=0.95)
+        if len(result)==0:
+            raise("Didn't find any match coin and exp scan money function")
+        result = result[0]
+        
+
+        top_left = result
+        bottom_right = (result[0] + 150, result[1] + 75)
+        cv2.rectangle(img, top_left,bottom_right, (0,255,0))
+
+        img_money = img[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
+        img_money_gray = cv2.cvtColor(img_money, cv2.COLOR_BGR2GRAY)
+        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*5,img_money_gray.shape[0]*5) )
+
+        result1 = self.analyzie_image(img_money_gray)
+
+        indices_first = np.where(img_money_gray>200)
+        indices_second = np.where((img_money_gray>75)&(img_money_gray<120) )
+
+        img_money_gray[:,:] = 255
+        
+        img_money_gray[indices_first] = 0
+        img_money_gray[indices_second] = 0
+        
+
+        result2 = self.analyzie_image(img_money_gray)
+  
+        result1 = result1['text']
+        result2 = result2['text']
+
+        money_1 = self.env.money
+        money_2 = self.env.money
+
+        xp_1 = self.env.xp
+        xp_2 = self.env.xp
+
+        try:
+            money_1,xp_1 = result1.split()[1],result1.split()[3]
+        except:
+            money_1 = self.env.money
+            xp_1 = self.env.exp
+        
+        try:
+            money_2,xp_2 = result2.split()[1],result2.split()[3]
+        except:
+            money_2 = self.env.money
+            xp_2 = self.env.exp
+
+        money_finale = self.env.money
+        xp_finale = self.env.xp
+
+        if money_1 == money_2:
+            money_finale = money_1
+        else:
+            if(abs(self.env.money-money_1) < abs (self.env.money - money_2)) :
+                money_finale = money_1
+            else:
+                money_finale = money_2
+
+        if xp_1 == xp_2:
+            xp_finale = xp_1
+        else:
+            if(abs(self.env.xp-xp_1) < abs (self.env.xp - xp_2)) :
+                xp_finale = xp_1
+            else:
+                xp_finale = xp_2
+
+        return (money_finale, xp_finale)
+        
+        #since the scan is not perfect we match the results
+
+
+        
+        # color_coverted = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
+        # cv2.imshow("OpenCV Image", opencv_image)
+
+        # pil_image = Image.fromarray(color_coverted)
+        # pil_image.show()
+
+        
+
 
     def scan_xp(self):
         pass
     
     def initial_scan_health(self):
-        template = cv2.imread(f'AgeOfWarAI/assets/hpbar.png')
+        template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
         img = cv2.imread('AgeOfWarAI/assets/game2.png') # screenshot
 
         positions = self.get_position(img, template, 0.95)
@@ -95,7 +180,7 @@ class GameVision(object):
         self.enemy_health_position = new_positions[1]
 
     def scan_health(self):
-        template = cv2.imread(f'AgeOfWarAI/assets/hpbar.png')
+        template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
         img = cv2.imread('AgeOfWarAI/assets/game6.png') # screenshot
         # I am adding an offset to eliminate some potentially hazardous values
         top_left = (5 + self.player_health_position[0],self.player_health_position[1])
@@ -198,7 +283,8 @@ class WindowManagement(object):
         window = a[0]
         window.move(-window.left, -window.top)
         window.maximize()
-        window.resize(-window.size[0]+1800,-window.size[1]+600)
+        # window.resize(-window.size[0]+1800,-window.size[1]+600)
+        window.resize(-window.size[0]+2600,-window.size[1]+900)
 
     def visualize_image(img):
         cv2.imshow("img", img)
@@ -206,8 +292,10 @@ class WindowManagement(object):
         cv2.destroyAllWindows()
 
     def screenshot(self):
-        im = pyautogui.screenshot(region=(0,45,1700,525))
+        im = pyautogui.screenshot(region=(0,90,2600,800))
         opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
+        cv2.imshow("fa",opencvImage)
+        cv2.waitKey()
         return opencvImage
         
 
@@ -215,9 +303,10 @@ class WindowManagement(object):
 if __name__ == "__main__":
     obj1 = WindowManagement()
     obj1.initial_setup()
+    #obj1.screenshot()
     obj = GameVision()
-    obj.initial_scan_health()
-    a=obj.scan_health()
+    a = obj.scan_money()
     print(a)
+
     pass
 

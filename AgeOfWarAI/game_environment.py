@@ -1,6 +1,8 @@
 
 class Env(object):
     
+    age = 1
+
     def __init__(self) -> None:
         pass
         
