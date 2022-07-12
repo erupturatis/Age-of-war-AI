@@ -277,7 +277,7 @@ class GameVision(object):
         new_locations = list()
 
         for i in range(len(locations)):
-            print(locations[i])
+          
             if locations[i][1] > floor:
                 new_locations.append(locations[i])
 
@@ -296,8 +296,8 @@ class GameVision(object):
 
     def scan_troops(self, img = None, age:str = 'age1', flip = False):
 
-        img = cv2.imread('AgeOfWarAI/assets/environment/age1troops.png') # change
-        img = img[600:-100,800:-150]
+        img = cv2.imread('AgeOfWarAI/assets/tests/test10.png') # change
+        img = img[600:-90,850:-200]
         #img = cv2.flip(img, 1)
 
         def first_age():
@@ -315,13 +315,13 @@ class GameVision(object):
             locations_tier_1 = self.get_position(img, template_tier_1, threshold -.02 )
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold )
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.1)
             locations_tier_2 = self.clustering_values(locations_tier_2)
 
             locations_tier_3 = self.get_position(img, template_tier_3, threshold )
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
-            self.visualize_locations(img, locations_tier_1)
+            #self.visualize_locations(img, locations_tier_2)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
         
@@ -335,18 +335,16 @@ class GameVision(object):
 
             threshold = 0.9
 
-            locations_tier_1 = self.get_position(img, template_tier_1, threshold - .05)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold - .1)
             locations_tier_1 = self.clustering_values(locations_tier_1)
-            locations_tier_1 = self.filter_height(locations_tier_1, floor=325)
+            locations_tier_1 = self.filter_height(locations_tier_1, floor=120)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .1)
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .2)
             locations_tier_2 = self.clustering_values(locations_tier_2)
 
-            locations_tier_3 = self.get_position(img, template_tier_3, threshold -.05)
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold -.15)
             locations_tier_3 = self.clustering_values(locations_tier_3)
-
             #self.visualize_locations(img, locations_tier_1)
-   
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
 
@@ -366,11 +364,11 @@ class GameVision(object):
             locations_tier_2 = self.get_position(img, template_tier_2, threshold - .08)
             locations_tier_2 = self.clustering_values(locations_tier_2)
             
-            locations_tier_3 = self.get_position(img, template_tier_3, threshold)
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold - .05)
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
             
-            #self.visualize_locations(img, locations_tier_2)
+            #self.visualize_locations(img, locations_tier_3)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
 
@@ -384,7 +382,7 @@ class GameVision(object):
 
             threshold = 0.9
 
-            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.15)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.2)
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
             locations_tier_2 = self.get_position(img, template_tier_2, threshold - .2)
@@ -394,7 +392,7 @@ class GameVision(object):
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
             
-            #self.visualize_locations(img, locations_tier_3)
+            #self.visualize_locations(img, locations_tier_2)
 
             return [len(locations_tier_1) - len(locations_tier_2), len(locations_tier_2), len(locations_tier_3)]
 
@@ -412,7 +410,7 @@ class GameVision(object):
             locations_tier_1 = self.get_position(img, template_tier_1, threshold -.15)
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.1)
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.2)
             locations_tier_2 = self.clustering_values(locations_tier_2)
 
             locations_tier_3 = self.get_position(img, template_tier_3, threshold -.05)
@@ -421,18 +419,25 @@ class GameVision(object):
             locations_tier_4 = self.get_position(img, template_tier_4, threshold -.15)
             locations_tier_4 = self.clustering_values(locations_tier_4)
 
-            #self.visualize_locations(img, locations_tier_4)
+            #self.visualize_locations(img, locations_tier_2)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3), len(locations_tier_4)]
 
             
                 
         arr1, arr2, arr3, arr4, arr5 = first_age(), second_age(), third_age(), fourth_age(), fifth_age()
-        print(arr1)
-        print(arr2)
-        print(arr3)
-        print(arr4)
-        print(arr5)
+
+        # print(arr1)
+        # print(arr2)
+        # print(arr3)
+        # print(arr4)
+        # print(arr5)
+
+        # cv2.imshow("img", img)
+        # cv2.waitKey()
+
+        return arr1, arr2, arr3, arr4, arr5
+
         # arr = third_age()
         # print(arr)
 
