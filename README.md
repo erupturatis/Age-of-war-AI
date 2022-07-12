@@ -50,5 +50,5 @@ The assets work only for the that specific resolution
 If you want to modify the game resoltion you will have to change the assets size accordingly (eg: make the game and the assets x% smaller)
 
 
-You can install the archive I used for the game from here:
+You can download the archive I used for the game from here:
 

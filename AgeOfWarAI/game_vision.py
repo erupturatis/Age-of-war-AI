@@ -263,7 +263,6 @@ class GameVision(object):
         locations = sorted(locations, key = lambda x : x[0])
         locations = np.array(locations)
         appended = False
-        print(locations)
 
         for i in range(len(locations)-1):
             if abs(locations[i][0] - locations[i+1][0]) < 10:
@@ -274,22 +273,38 @@ class GameVision(object):
         
         return new_locations
 
+    def filter_height(self, locations, floor):
+        new_locations = list()
+
+        for i in range(len(locations)):
+            print(locations[i])
+            if locations[i][1] > floor:
+                new_locations.append(locations[i])
+
+        return new_locations
+
+
     def visualize_locations(self, img, locations):
         for loc in locations:
             top_left = loc
             bottom_right = (top_left[0] + 20, top_left[1] + 20)
 
-            cv2.rectangle(img, top_left, bottom_right,(0,255,0),1)
+            cv2.rectangle(img, top_left, bottom_right,(0,255,0),2)
             
         cv2.imshow('Matches', img)
         cv2.waitKey()
 
-    def scan_friendly_troops(self, age:str = 'age1'):
-        
+    def scan_troops(self, img = None, age:str = 'age1', flip = False):
+
+        img = cv2.imread('AgeOfWarAI/assets/environment/age1troops.png') # change
+        img = img[600:-100,800:-150]
+        #img = cv2.flip(img, 1)
+
         def first_age():
             #gets clubman and slinger together
-            img = cv2.imread('AgeOfWarAI/assets/environment/age1troops.png') # change
-            img = img[400:-50,800:-150]
+            #img = cv2.imread('AgeOfWarAI/assets/environment/age1troops.png') # change
+            #img = img[400:-50,800:-150]
+
 
             template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age1tier1.png')
             template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age1tier2.png')
@@ -297,7 +312,7 @@ class GameVision(object):
 
             threshold = 0.9
 
-            locations_tier_1 = self.get_position(img, template_tier_1, threshold + .02)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.02 )
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
             locations_tier_2 = self.get_position(img, template_tier_2, threshold )
@@ -306,13 +321,13 @@ class GameVision(object):
             locations_tier_3 = self.get_position(img, template_tier_3, threshold )
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
-            #self.visualize_locations(img, locations_tier_3)
+            self.visualize_locations(img, locations_tier_1)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
         
         def second_age():
-            img = cv2.imread('AgeOfWarAI/assets/environment/age2troops.png') # change
-            img = img[400:-50,800:-150]
+            #img = cv2.imread('AgeOfWarAI/assets/environment/age2troops.png') # change
+            #img = img[400:-50,800:-150]
 
             template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age2tier1.png')
             template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age2tier2.png')
@@ -320,23 +335,24 @@ class GameVision(object):
 
             threshold = 0.9
 
-            locations_tier_1 = self.get_position(img, template_tier_1, threshold +.05)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold - .05)
             locations_tier_1 = self.clustering_values(locations_tier_1)
+            locations_tier_1 = self.filter_height(locations_tier_1, floor=325)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold)
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .1)
             locations_tier_2 = self.clustering_values(locations_tier_2)
 
             locations_tier_3 = self.get_position(img, template_tier_3, threshold -.05)
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
-            #self.visualize_locations(img, locations_tier_3)
+            #self.visualize_locations(img, locations_tier_1)
    
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
 
         def third_age():
-            img = cv2.imread('AgeOfWarAI/assets/environment/age3troops.png') # change
-            img = img[400:-50,800:-150]
+            #img = cv2.imread('AgeOfWarAI/assets/environment/age3troops.png') # change
+            #img = img[400:-50,800:-150]
             
             template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age3tier1.png')
             template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age3tier2.png')
@@ -347,20 +363,20 @@ class GameVision(object):
             locations_tier_1 = self.get_position(img, template_tier_1, threshold + .05)
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .1)
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .08)
             locations_tier_2 = self.clustering_values(locations_tier_2)
-
+            
             locations_tier_3 = self.get_position(img, template_tier_3, threshold)
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
             
-            #self.visualize_locations(img, locations_tier_3)
+            #self.visualize_locations(img, locations_tier_2)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
 
         def fourth_age():
-            img = cv2.imread('AgeOfWarAI/assets/environment/age4troops.png') # change
-            img = img[400:-50,800:-150]
+            #img = cv2.imread('AgeOfWarAI/assets/environment/age4troops.png') # change
+            #img = img[400:-50,800:-150]
 
             template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age4tier12.png')
             template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age4tier2.png')
@@ -383,8 +399,8 @@ class GameVision(object):
             return [len(locations_tier_1) - len(locations_tier_2), len(locations_tier_2), len(locations_tier_3)]
 
         def fifth_age():
-            img = cv2.imread('AgeOfWarAI/assets/environment/age5troops.png') # change
-            img = img[400:-50,800:-150]
+            #img = cv2.imread('AgeOfWarAI/assets/environment/age5troops.png') # change
+            #img = img[400:-50,800:-150]
 
             template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age5tier1.png')
             template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age5tier2.png')
@@ -405,13 +421,20 @@ class GameVision(object):
             locations_tier_4 = self.get_position(img, template_tier_4, threshold -.15)
             locations_tier_4 = self.clustering_values(locations_tier_4)
 
-            self.visualize_locations(img, locations_tier_4)
+            #self.visualize_locations(img, locations_tier_4)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3), len(locations_tier_4)]
 
             
                 
-        return fifth_age()
+        arr1, arr2, arr3, arr4, arr5 = first_age(), second_age(), third_age(), fourth_age(), fifth_age()
+        print(arr1)
+        print(arr2)
+        print(arr3)
+        print(arr4)
+        print(arr5)
+        # arr = third_age()
+        # print(arr)
 
 
 class WindowManagement(object):
@@ -451,7 +474,7 @@ if __name__ == "__main__":
     #obj1.screenshot()
 
     obj = GameVision()
-    a = obj.scan_friendly_troops()
+    a = obj.scan_troops()
     print(a)
 
     pass
