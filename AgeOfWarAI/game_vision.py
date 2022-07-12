@@ -4,6 +4,7 @@ import pyautogui
 from PIL import Image, ImageOps, ImageFilter
 from pytesseract import pytesseract
 from pytesseract import Output
+from utils import *
 
 class GameVision(object):
 
@@ -80,12 +81,9 @@ class GameVision(object):
         return image_data
 
 
-    def get_position(self, img, template, treshold):
-       
-        # cv2.imshow("img",img)
-        # cv2.imshow("templ",template)
-        # cv2.waitKey()
-        method = cv2.TM_CCOEFF_NORMED
+    def get_position(self, img, template, treshold, method = cv2.TM_CCOEFF_NORMED):
+    
+        
         result = cv2.matchTemplate(img, template, method)
         #print(result)
         locations = np.where(result >= treshold)
@@ -175,10 +173,6 @@ class GameVision(object):
 
         # pil_image = Image.fromarray(color_coverted)
         # pil_image.show()
-
-
-    def scan_xp(self):
-        pass
     
 
     def initial_scan_health(self):
@@ -252,11 +246,7 @@ class GameVision(object):
         return(player_hp, enemy_hp)
 
 
-    def scan_enemy_age(self):
-        pass
-
-
-    def clustering_values(self, locations):
+    def clustering_values(self, locations, treshold = 10, dimension = 0):
         new_locations = list()
      
         locations.append((9999,9999))
@@ -265,7 +255,7 @@ class GameVision(object):
         appended = False
 
         for i in range(len(locations)-1):
-            if abs(locations[i][0] - locations[i+1][0]) < 10:
+            if abs(locations[i][dimension] - locations[i+1][dimension]) < treshold:
                 continue
             else:
                 new_locations.append(locations[i])
@@ -294,7 +284,7 @@ class GameVision(object):
         cv2.imshow('Matches', img)
         cv2.waitKey()
 
-    def scan_troops(self, img = None, age:str = 'age1', flip = False):
+    def scan_troops(self, age:str = 'age1', flip = False):
 
         img = cv2.imread('AgeOfWarAI/assets/tests/test10.png') # change
         img = img[600:-90,850:-200]
@@ -441,45 +431,34 @@ class GameVision(object):
         # arr = third_age()
         # print(arr)
 
+    def scan_training(self):
+        img = cv2.imread('AgeOfWarAI/assets/tests/test11.png') # change
+        template = cv2.imread('AgeOfWarAI/assets/misc/training.png')
 
-class WindowManagement(object):
-
-    def __init__(self) -> None:
-        pass
-
-
-    def initial_setup(self):
-        a = pyautogui.getWindowsWithTitle("Adobe Flash Player 32")
-        if len(a) == 0: return
-        window = a[0]
-        window.move(-window.left, -window.top)
-        window.maximize()
-        # window.resize(-window.size[0]+1800,-window.size[1]+600)
-        window.resize(-window.size[0]+2600,-window.size[1]+900)
-
-
-    def visualize_image(img):
-        cv2.imshow("img", img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-
-    def screenshot(self):
-        im = pyautogui.screenshot(region=(0,90,2600,800))
-        opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
-        cv2.imshow("fa",opencvImage)
-        cv2.waitKey()
-        return opencvImage
+        img = img[:-800,900:-900]
         
+        result = cv2.matchTemplate(img, template, cv2.TM_SQDIFF_NORMED)
+        locations = np.where(result <= .001)
+        locations = list(zip(*locations[::-1]))
+        locations = self.clustering_values(locations, 3, 1)
+        locations = self.clustering_values(locations, 3, 0)
+        # print(locations)
+        # for loc in locations:
+        #     cv2.rectangle(img, loc, (loc[0]+10,loc[1]+10),(0,255,0),3)
+    
+        # cv2.imshow("img",img)
+        # cv2.waitKey()
+        return len(locations)
+
+
 
 
 if __name__ == "__main__":
-    obj1 = WindowManagement()
-    obj1.initial_setup()
-    #obj1.screenshot()
 
+    #obj1.screenshot()
+    initial_setup()
     obj = GameVision()
-    a = obj.scan_troops()
+    a = obj.scan_training()
     print(a)
 
     pass
