@@ -22,45 +22,63 @@ class GameVision(object):
         }
         return dict[args[0]](args[1:])
 
-    def scan_battle(self, *args):
+    def scan_coins(self, *args):
         # game input
-        img = cv2.imread('AgeOfWarAI/assets/environment/test2.png') # change
+        img = cv2.imread('AgeOfWarAI/assets/environment/test4.png') # change
         img = img[600:-100,875:-250]
         # standard coin identifier
-        template = cv2.imread('AgeOfWarAI/assets/misc/coin.png')
-        h, w, c = template.shape
+        template1 = cv2.imread('AgeOfWarAI/assets/misc/coin1.png')
+        template2 = cv2.imread('AgeOfWarAI/assets/misc/coin2.png')
+
+        h, w, c = template1.shape
         h_img, w_img, c_img = img.shape
         # image dimensions
         method = cv2.TM_SQDIFF_NORMED # best method so far
 
-        result = cv2.matchTemplate(img, template, method)
-        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+        treshold = .04
 
-        location = min_loc
-        bottom_right = (location[0] + w, location[1] + h)   
-        # location of best match
+        result = cv2.matchTemplate(img, template1, method)
+        locations1 = np.where(result <= treshold)
+        locations1 = list(zip(*locations1[::-1]))
 
-        cv2.rectangle(img, location, bottom_right, 255, 5)
-        cv2.imshow('Match', img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        print(min_val)
-        if min_val > .05:
-            # didn't found any coin
+        result = cv2.matchTemplate(img, template2, method)
+        locations2 = np.where(result <= treshold)
+        locations2 = list(zip(*locations2[::-1]))
+
+        locations1 = self.clustering_values(locations1)
+        locations2 = self.clustering_values(locations2)
+
+        locations = None
+
+        if len(locations1) == 0:
+            locations = locations2
+        elif len(locations2) == 0:
+            locations = locations1
+        else:
+            locations = np.concatenate((locations1,locations2))
+
+        # for loc in locations:
+        #     print(loc)
+        #     cv2.rectangle(img, (loc[0],loc[1]),(loc[0] + w, loc[1] + h), (0,255,0),5)
+
+        # cv2.imshow('Match', img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
+
+        if len(locations) == 0:
             return None
         else:
-            # return at what % of the map the battle took place 1 meaning the enemy base
-            # the script will take the position of multiple coins and get the left most position
-            return bottom_right[0] / w_img
-
-
-        
+            locations = sorted(locations, key = lambda x : x[0])
+            locations = np.array(locations)
+            return locations[0][0]/w_img
+     
 
     def analyzie_image(self, img):
         #img = cv2.imread("AgeOfWarAI/assets/game2.png")
         pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
         image_data = pytesseract.image_to_string(img, output_type=Output.DICT)
         return image_data
+
 
     def get_position(self, img, template, treshold):
        
@@ -158,12 +176,11 @@ class GameVision(object):
         # pil_image = Image.fromarray(color_coverted)
         # pil_image.show()
 
-        
-
 
     def scan_xp(self):
         pass
     
+
     def initial_scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
         img = cv2.imread('AgeOfWarAI/assets/game2.png') # change
@@ -182,6 +199,7 @@ class GameVision(object):
 
         self.player_health_position = new_positions[0]
         self.enemy_health_position = new_positions[1]
+
 
     def scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
@@ -237,44 +255,163 @@ class GameVision(object):
     def scan_enemy_age(self):
         pass
 
-    def scan_enemy_troops(self, age):
+
+    def clustering_values(self, locations):
+        new_locations = list()
+     
+        locations.append((9999,9999))
+        locations = sorted(locations, key = lambda x : x[0])
+        locations = np.array(locations)
+        appended = False
+        print(locations)
+
+        for i in range(len(locations)-1):
+            if abs(locations[i][0] - locations[i+1][0]) < 10:
+                continue
+            else:
+                new_locations.append(locations[i])
+                appended = True
+        
+        return new_locations
+
+    def visualize_locations(self, img, locations):
+        for loc in locations:
+            top_left = loc
+            bottom_right = (top_left[0] + 20, top_left[1] + 20)
+
+            cv2.rectangle(img, top_left, bottom_right,(0,255,0),1)
+            
+        cv2.imshow('Matches', img)
+        cv2.waitKey()
+
+    def scan_friendly_troops(self, age:str = 'age1'):
         
         def first_age():
             #gets clubman and slinger together
-            img = cv2.imread('AgeOfWarAI/assets/game1.png') # change
-            template = cv2.imread('AgeOfWarAI/assets/enemy/clubman6.png')
-            threshold = 0.65
+            img = cv2.imread('AgeOfWarAI/assets/environment/age1troops.png') # change
+            img = img[400:-50,800:-150]
 
-            method = cv2.TM_CCOEFF_NORMED
-            result = cv2.matchTemplate(img, template, method)
+            template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age1tier1.png')
+            template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age1tier2.png')
+            template_tier_3 = cv2.imread('AgeOfWarAI/assets/player/age1tier3.png')
 
-            locations = np.where(result >= threshold)
-            locations = list(zip(*locations[::-1]))
+            threshold = 0.9
 
-            if locations:
-                template_w = template.shape[1]
-                template_h = template.shape[0]
-                line_color = (0, 255, 0)
-                # clustering the clone values into one and eliminating errors
-                new_locations = list()
-                locations.sort()
-                for i in range(len(locations)-1):
-                    if abs(locations[i][0] - locations[i+1][0]) < 10 or not(locations[i][1]>500 and locations[i][1]<530) or locations[i][0] < 600 or locations[i][0] > 1550:
-                        continue
-                    else:
-                        new_locations.append(locations[i])
-                    
-                print(len(new_locations))
-                print(len(locations))
-                for loc in new_locations:
-                    top_left = loc
-                    bottom_right = (top_left[0] + template_w, top_left[1] + template_h)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold + .02)
+            locations_tier_1 = self.clustering_values(locations_tier_1)
 
-                    cv2.rectangle(img, top_left, bottom_right, line_color)
-                
-                cv2.imshow('Matches', img)
-                cv2.waitKey()
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold )
+            locations_tier_2 = self.clustering_values(locations_tier_2)
+
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold )
+            locations_tier_3 = self.clustering_values(locations_tier_3)
+
+            #self.visualize_locations(img, locations_tier_3)
+
+            return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
         
+        def second_age():
+            img = cv2.imread('AgeOfWarAI/assets/environment/age2troops.png') # change
+            img = img[400:-50,800:-150]
+
+            template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age2tier1.png')
+            template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age2tier2.png')
+            template_tier_3 = cv2.imread('AgeOfWarAI/assets/player/age2tier3.png')
+
+            threshold = 0.9
+
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold +.05)
+            locations_tier_1 = self.clustering_values(locations_tier_1)
+
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold)
+            locations_tier_2 = self.clustering_values(locations_tier_2)
+
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold -.05)
+            locations_tier_3 = self.clustering_values(locations_tier_3)
+
+            #self.visualize_locations(img, locations_tier_3)
+   
+
+            return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
+
+        def third_age():
+            img = cv2.imread('AgeOfWarAI/assets/environment/age3troops.png') # change
+            img = img[400:-50,800:-150]
+            
+            template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age3tier1.png')
+            template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age3tier2.png')
+            template_tier_3 = cv2.imread('AgeOfWarAI/assets/player/age3tier3.png')
+
+            threshold = 0.9
+
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold + .05)
+            locations_tier_1 = self.clustering_values(locations_tier_1)
+
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .1)
+            locations_tier_2 = self.clustering_values(locations_tier_2)
+
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold)
+            locations_tier_3 = self.clustering_values(locations_tier_3)
+
+            
+            #self.visualize_locations(img, locations_tier_3)
+
+            return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
+
+        def fourth_age():
+            img = cv2.imread('AgeOfWarAI/assets/environment/age4troops.png') # change
+            img = img[400:-50,800:-150]
+
+            template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age4tier12.png')
+            template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age4tier2.png')
+            template_tier_3 = cv2.imread('AgeOfWarAI/assets/player/age4tier3.png')
+
+            threshold = 0.9
+
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.15)
+            locations_tier_1 = self.clustering_values(locations_tier_1)
+
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold - .2)
+            locations_tier_2 = self.clustering_values(locations_tier_2)
+
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold)
+            locations_tier_3 = self.clustering_values(locations_tier_3)
+
+            
+            #self.visualize_locations(img, locations_tier_3)
+
+            return [len(locations_tier_1) - len(locations_tier_2), len(locations_tier_2), len(locations_tier_3)]
+
+        def fifth_age():
+            img = cv2.imread('AgeOfWarAI/assets/environment/age5troops.png') # change
+            img = img[400:-50,800:-150]
+
+            template_tier_1 = cv2.imread('AgeOfWarAI/assets/player/age5tier1.png')
+            template_tier_2 = cv2.imread('AgeOfWarAI/assets/player/age5tier2.png')
+            template_tier_3 = cv2.imread('AgeOfWarAI/assets/player/age5tier3.png')
+            template_tier_4 = cv2.imread('AgeOfWarAI/assets/player/age5tier4.png')
+
+            threshold = 0.9
+
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.15)
+            locations_tier_1 = self.clustering_values(locations_tier_1)
+
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.1)
+            locations_tier_2 = self.clustering_values(locations_tier_2)
+
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold -.05)
+            locations_tier_3 = self.clustering_values(locations_tier_3)
+
+            locations_tier_4 = self.get_position(img, template_tier_4, threshold -.15)
+            locations_tier_4 = self.clustering_values(locations_tier_4)
+
+            self.visualize_locations(img, locations_tier_4)
+
+            return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3), len(locations_tier_4)]
+
+            
+                
+        return fifth_age()
 
 
 class WindowManagement(object):
@@ -282,18 +419,22 @@ class WindowManagement(object):
     def __init__(self) -> None:
         pass
 
+
     def initial_setup(self):
-        a = pyautogui.getWindowsWithTitle("Adobe Flash Player 13")
+        a = pyautogui.getWindowsWithTitle("Adobe Flash Player 32")
+        if len(a) == 0: return
         window = a[0]
         window.move(-window.left, -window.top)
         window.maximize()
         # window.resize(-window.size[0]+1800,-window.size[1]+600)
         window.resize(-window.size[0]+2600,-window.size[1]+900)
 
+
     def visualize_image(img):
         cv2.imshow("img", img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
 
     def screenshot(self):
         im = pyautogui.screenshot(region=(0,90,2600,800))
@@ -308,8 +449,9 @@ if __name__ == "__main__":
     obj1 = WindowManagement()
     obj1.initial_setup()
     #obj1.screenshot()
+
     obj = GameVision()
-    a = obj.scan_battle()
+    a = obj.scan_friendly_troops()
     print(a)
 
     pass

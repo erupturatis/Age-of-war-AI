@@ -1,4 +1,5 @@
 import numpy as np
-b = np.array([7,2,3,4])
-a = np.where(b>=3)
-print(a)
+b = np.array([(1,2),(2,3)])
+a = np.array([(1,1)])
+c = np.concatenate((a,b))
+print(c)
