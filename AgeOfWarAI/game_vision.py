@@ -456,10 +456,9 @@ class GameVision(object):
 if __name__ == "__main__":
 
     #obj1.screenshot()
-    initial_setup()
+    focus_window()
     obj = GameVision()
     a = obj.scan_training()
     print(a)
-
     pass
 

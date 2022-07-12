@@ -1,12 +1,42 @@
-s = 'saihfhawa'
-a = 10
-b = 5
-print(f"{a:1}")
-print(f"{b:1}")
+from utils import *
+from game_environment import Env
+from time import time
+# about 0.25 seconds per screenshot
+# 4 windows would mean an action per second which should be enough
+if __name__ == "__main__":
+    
+    # env = Env()
+    # env.use_ability()
+    sec = time()
+    WM = WindowManagement()
+    WM.focus_window(0)
+    WM.screenshot("img1")
+    WM.defocus_window(0)
+    
 
-from typing import Literal
+    WM.focus_window(1)
+    WM.screenshot("img2")
+    WM.defocus_window(1)
 
-def accepts_only_four(x: Literal[4]) -> None:
-    print("ceva")
 
-accepts_only_four(6)
+    WM.focus_window(0)
+    WM.screenshot("img3")
+    WM.defocus_window(0)
+    
+
+    WM.focus_window(1)
+    WM.screenshot("img4")
+    WM.defocus_window(1)
+
+
+
+
+    sec2 = time()
+    print(sec2 - sec)
+
+    
+
+
+
+
+
