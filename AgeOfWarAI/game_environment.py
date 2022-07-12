@@ -3,21 +3,29 @@ import time
 from GLOBALS import GLOBAL_VALUES
 
 class Env(object):
-    
+    assigned_window = 0
+    window_manager = None
     age = 1
     ability_used = None
     money = 0
     available_slots = 1
     total_slots = 1
     slots = [0,None,None,None]
+    turrets = [
+        [0,0],
+        [0,0],
+        [0,0],
+        [0,0]
+    ]
 
     turrets_cost = GLOBAL_VALUES['turrets']
     troops_cost = GLOBAL_VALUES['troops']
 
     mouse_values = GLOBAL_VALUES['mouse_values']
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, window_manager, assigned_window) -> None:
+        self.window_manager = window_manager
+        self.assigned_window = assigned_window
         
     def go_back(self):
         pos = self.mouse_values['back']
@@ -65,6 +73,9 @@ class Env(object):
             pos = self.mouse_values[f'turret_spot{i}']
             pg.moveTo(*pos)
             pg.click()
+
+            self.slots[i] = 1
+            self.turrets[i] = [tier, self.age]
     
 
     def use_ability(self):
@@ -76,34 +87,36 @@ class Env(object):
             pg.click()
 
     def check_ability_avalability(self):
-        if self.abilityused == None: return True
+        if self.ability_used == None: return True
         seconds = time.time()
         if seconds - self.ability_used >= 60:
             return True
         return False
 
     def add_turret_slot(self):
-        pass
+        pos = self.mouse_values['buy_spot']
+        pg.moveTo(*pos)
+        pg.click()
 
     def sell_turret_activate(self):
-        pass
+        pos = self.mouse_values['sell_turret']
+        pg.moveTo(*pos)
+        pg.click()
 
-    def sell_turret1(self):
-        pass
-
-    def sell_turret2(self):
-        pass
-
-    def sell_turret3(self):
-        pass
-
-    def sell_turret4(self):
-        pass
+    def sell_turretn(self, number = 0):
+        self.sell_turret_activate()
+        pos = self.mouse_values[f'turret_spot{number}']
+        pg.moveTo(*pos)
+        pg.click()
+        self.turrets[number] = [0,0]
+        self.slots[number] = 0
+        self.available_slots += 1
 
     def get_inputs(self):
         pass
 
-    def take_action(self):
+    def screenshot_environment(self):
         pass
+
     
   

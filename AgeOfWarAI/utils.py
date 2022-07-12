@@ -12,7 +12,7 @@ class WindowManagement(object):
 
         if len(self.windows) == 0: return
         window = self.windows[number]
-        window.move(-window.left, -window.top + 10)
+        window.move(-window.left, -window.top)
         # window.resize(-window.size[0]+1800,-window.size[1]+600)
         window.resize(-window.size[0]+2600,-window.size[1]+900)
         pyautogui.click(300,50)
