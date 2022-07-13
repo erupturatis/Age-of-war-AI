@@ -9,7 +9,7 @@ from utils import *
 class GameVision(object):
 
     env = None
-    screenshoot = None
+    screenshot = None
     player_health_position = None
     enemy_health_position = None
 
@@ -458,7 +458,10 @@ if __name__ == "__main__":
     #obj1.screenshot()
 
     obj = GameVision()
-    a = obj.scan_training()
-    print(a)
+    training = obj.scan_training()
+    obj.initial_scan_health()
+    hp = obj.scan_health()
+
+
     pass
 

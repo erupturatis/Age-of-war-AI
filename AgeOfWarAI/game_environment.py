@@ -17,35 +17,38 @@ class Env(object):
         [0,0],
         [0,0]
     ]
+    data_grabber = None
 
-    turrets_cost = GLOBAL_VALUES['turrets']
-    troops_cost = GLOBAL_VALUES['troops']
+    TURRETS_COST = GLOBAL_VALUES['turrets']
+    TROOPS_COST = GLOBAL_VALUES['troops']
 
-    mouse_values = GLOBAL_VALUES['mouse_values']
+    MOUSE_VALUES = GLOBAL_VALUES['mouse_values']
 
-    def __init__(self, window_manager, assigned_window) -> None:
+    def __init__(self, window_manager, assigned_window, data_grabber) -> None:
         self.window_manager = window_manager
         self.assigned_window = assigned_window
+        self.data_grabber = data_grabber
         
     def go_back(self):
-        pos = self.mouse_values['back']
+        pos = self.MOUSE_VALUES['back']
         pg.moveTo(*pos)
         pg.click()
 
     def upgrade_age(self):
-        pos = self.mouse_values['special']
+        pos = self.MOUSE_VALUES['special']
         pg.moveTo(*pos)
         pg.click()
+        self.age += 1
     
     def access_troops(self):
-        pos = self.mouse_values['train_units']
+        pos = self.MOUSE_VALUES['train_units']
         pg.moveTo(*pos)
         pg.click()
 
     def spawn_troop(self, tier):
-        if self.money > self.troops_cost[self.age][f'tier{tier}']:
+        if self.money > self.TROOPS_COST[self.age][f'tier{tier}']:
             self.access_troops()
-            pos = self.mouse_values[f'tier{tier}']
+            pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
             pg.click()
             self.go_back()
@@ -53,14 +56,14 @@ class Env(object):
         return False
 
     def access_turret(self):
-        pos = self.mouse_values['get_turret']
+        pos = self.MOUSE_VALUES['get_turret']
         pg.moveTo(*pos)
         pg.click()
 
     def spawn_turret(self, tier):
-        if self.money > self.turrets_cost[self.age][f'tier{tier}'] and self.available_slots>0:
+        if self.money > self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots>0:
             self.access_turret()
-            pos = self.mouse_values[f'tier{tier}']
+            pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
             pg.click()
             slot = None
@@ -70,7 +73,7 @@ class Env(object):
                     slot = i
                     break
             
-            pos = self.mouse_values[f'turret_spot{i}']
+            pos = self.MOUSE_VALUES[f'turret_spot{i}']
             pg.moveTo(*pos)
             pg.click()
 
@@ -82,7 +85,7 @@ class Env(object):
 
         if self.check_ability_avalability():
             self.ability_used = time.time()
-            pos = self.mouse_values['special']
+            pos = self.MOUSE_VALUES['special']
             pg.moveTo(*pos)
             pg.click()
 
@@ -94,29 +97,44 @@ class Env(object):
         return False
 
     def add_turret_slot(self):
-        pos = self.mouse_values['buy_spot']
+        pos = self.MOUSE_VALUES['buy_spot']
         pg.moveTo(*pos)
         pg.click()
 
     def sell_turret_activate(self):
-        pos = self.mouse_values['sell_turret']
+        pos = self.MOUSE_VALUES['sell_turret']
         pg.moveTo(*pos)
         pg.click()
 
     def sell_turretn(self, number = 0):
         self.sell_turret_activate()
-        pos = self.mouse_values[f'turret_spot{number}']
+        pos = self.MOUSE_VALUES[f'turret_spot{number}']
         pg.moveTo(*pos)
         pg.click()
         self.turrets[number] = [0,0]
         self.slots[number] = 0
         self.available_slots += 1
 
-    def get_inputs(self):
+    def reset_everything(self):
+        self.age = 1
+        self.ability_used = None
+        self.money = 0
+        self.available_slots = 1
+        self.total_slots = 1
+        self.slots = [0,None,None,None]
+        self.turrets = [
+            [0,0],
+            [0,0],
+            [0,0],
+            [0,0]
+        ]
+
+    def pass_actions(self, action):
         pass
 
-    def screenshot_environment(self):
-        pass
+    def get_inputs(self):
+        inputs = self.data_grabber(self.assigned_window)
+        return inputs
 
     
   
