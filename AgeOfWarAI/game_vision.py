@@ -82,12 +82,19 @@ class GameVision(object):
 
 
     def get_position(self, img, template, treshold, method = cv2.TM_CCOEFF_NORMED):
-    
-        
+
         result = cv2.matchTemplate(img, template, method)
-        #print(result)
-        locations = np.where(result >= treshold)
-        locations = list(zip(*locations[::-1]))
+        #print(result)pr
+        # cv2.imshow("",img)
+        # cv2.waitKey()
+
+        if method == cv2.TM_SQDIFF_NORMED:
+            locations = np.where(result <= treshold)
+            locations = list(zip(*locations[::-1]))
+        else:
+            locations = np.where(result >= treshold)
+            locations = list(zip(*locations[::-1]))
+
         return locations
 
 
@@ -177,27 +184,38 @@ class GameVision(object):
 
     def initial_scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
-        img = cv2.imread('AgeOfWarAI/assets/game2.png') # change
+        img = self.screenshot # change
+        #img = cv2.imread(f'AgeOfWarAI/assets/tests/test1.png')
 
-        positions = self.get_position(img, template, 0.95)
+        positions = self.get_position(img, template, 0.01, cv2.TM_SQDIFF_NORMED)
         positions.sort()
+        #self.visualize_locations(img, positions)
+        #print(len(positions))
 
         new_positions = list()
-        positions.append((0,0))
+        positions.append((9999,9999))
         new_positions.sort()
         for i in range(len(positions)-1):
             if abs(positions[i][0] - positions[i+1][0]) < 10:
                 continue
             else:
                 new_positions.append(positions[i])
-
-        self.player_health_position = new_positions[0]
-        self.enemy_health_position = new_positions[1]
+        if len(new_positions) >= 2:
+            self.player_health_position = new_positions[0]
+            self.enemy_health_position = new_positions[1]
+        else:
+            self.player_health_position = (700, 279)
+            self.enemy_health_position = (2530, 279)
+        # print(new_positions[0])
+        # print(new_positions[1])
+        # print("new")
 
 
     def scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
-        img = cv2.imread('AgeOfWarAI/assets/game6.png') # change
+        # img = cv2.imread('AgeOfWarAI/assets/game6.png') # change
+        img = self.screenshot
+
         # I am adding an offset to eliminate some potentially hazardous values
         top_left = (5 + self.player_health_position[0],self.player_health_position[1])
         bottom_right = (-5 + self.player_health_position[0] + template.shape[1],self.player_health_position[1]+ template.shape[0])
@@ -206,17 +224,17 @@ class GameVision(object):
 
         player_health_bar = cv2.cvtColor(player_health_bar, cv2.COLOR_BGR2GRAY)
         (unique, counts) = np.unique(player_health_bar, return_counts=True)
-
+        # getting the most common pixel values by sorting
         counts = np.stack((counts,unique), axis=-1)
         counts = sorted(counts, key = lambda x : x[0])
         counts = np.array(counts)
-
+        
         player_counts = counts[::-1]
 
 
         top_left = (5 + self.enemy_health_position[0],self.enemy_health_position[1])
         bottom_right = (-5 + self.enemy_health_position[0] + template.shape[1],self.enemy_health_position[1]+ template.shape[0])
-        
+        #same for the enemy
         enemy_health_bar = img[top_left[1]:bottom_right[1],top_left[0]:bottom_right[0]]
       
         enemy_health_bar  = cv2.cvtColor(enemy_health_bar , cv2.COLOR_BGR2GRAY)
@@ -230,11 +248,12 @@ class GameVision(object):
 
         player_hp = None
         enemy_hp = None
-
+        # calculating hp, checking if the values closer to black (the missing hp)
+        # are appearing more than the others
         if player_counts[0][1] < player_counts[1][1]:
             player_hp = player_counts[1][0]/(player_counts[0][0]+player_counts[1][0])
         else:
-            player_hp = player_counts[0][0]/(player_counts[0]+player_counts[1])
+            player_hp = player_counts[0][0]/(player_counts[0][0]+player_counts[1][0])
 
         if enemy_counts[0][1] < enemy_counts[1][1]:
             enemy_hp = enemy_counts[1][0]/(enemy_counts[0][0]+enemy_counts[1][0])
@@ -242,8 +261,7 @@ class GameVision(object):
             enemy_hp = enemy_counts[0][0]/(enemy_counts[0][0]+enemy_counts[1][0])
 
 
-
-        return(player_hp, enemy_hp)
+        return player_hp, enemy_hp
 
 
     def clustering_values(self, locations, treshold = 10, dimension = 0):
@@ -432,11 +450,14 @@ class GameVision(object):
         # print(arr)
 
     def scan_training(self):
-        img = cv2.imread('AgeOfWarAI/assets/tests/test11.png') # change
+        img = self.screenshot # change
+        #img = cv2.imread('AgeOfWarAI/assets/tests/test1.png')
         template = cv2.imread('AgeOfWarAI/assets/misc/training.png')
 
-        img = img[:-800,900:-900]
-        
+        img = img[:-800,800:-800]
+
+
+
         result = cv2.matchTemplate(img, template, cv2.TM_SQDIFF_NORMED)
         locations = np.where(result <= .001)
         locations = list(zip(*locations[::-1]))
@@ -458,9 +479,9 @@ if __name__ == "__main__":
     #obj1.screenshot()
 
     obj = GameVision()
-    training = obj.scan_training()
+
     obj.initial_scan_health()
-    hp = obj.scan_health()
+    #hp = obj.scan_health()
 
 
     pass

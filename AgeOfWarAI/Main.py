@@ -12,6 +12,7 @@ class Master(object):
     wm = None
     gm = None
     envs = list()
+    scans = 0
 
     def __init__(self, number_windows = 1) -> None:
         self.number_windows = number_windows
@@ -31,14 +32,23 @@ class Master(object):
 
         self.wm.focus_window(window_num)
         screenshot = self.wm.screenshot()
+        self.gm.screenshot = screenshot
 
+        in_train = self.gm.scan_training()
+        if self.scans == 0 :
+            self.gm.initial_scan_health()
+        player_health, enemy_health = self.gm.scan_health()
+        print("player hp")
+        print(player_health)
+        print("enemy hp")
+        print(enemy_health)
         self.wm.defocus_window(window_num)
-
+        self.scans += 1
     
 
 
 if __name__ == "__main__":
-    number_of_windows = 4
+    number_of_windows = 1
     master = Master(number_of_windows)
     neats = NeatClass(master.envs)
     neats.neat_algorithm()

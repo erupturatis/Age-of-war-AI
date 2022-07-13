@@ -20,7 +20,7 @@ class WindowManagement(object):
 
     def screenshot(self, image_title = '0'):
 
-        im = pyautogui.screenshot(region=(0,90,2600,800))
+        im = pyautogui.screenshot(region=(0,0,2600,885))
         opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
         cv2.imwrite(f'{image_title}.png', opencvImage)
         return opencvImage
