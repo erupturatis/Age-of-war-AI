@@ -13,6 +13,6 @@ class NeatClass(object):
         for i in range(self.number_of_envs):
             env = self.envs[i]
             inputs = env.get_inputs()
-            print(inputs)
+            print(f"{i} and input {inputs}")
             
         print("finished neat")

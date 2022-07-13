@@ -1,5 +1,6 @@
 GLOBAL_VALUES = {
     "experience":[4000,14000,45000,20000, None],
+    "turret_slots":[1000,3000,7500,None],
     "troops":[
         {
 
@@ -67,6 +68,7 @@ GLOBAL_VALUES = {
         "tier1":(1550,100),
         "tier2":(1620,100),
         "tier3":(1675,100),
+        "tier3":(1745,100),
         "train_units":(1520,100),
         "get_turret":(1600,100),
         "sell_turret":(1675,100),

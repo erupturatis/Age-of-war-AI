@@ -10,29 +10,36 @@ class Master(object):
 
     number_windows = 1
     wm = None
+    gm = None
     envs = list()
 
     def __init__(self, number_windows = 1) -> None:
         self.number_windows = number_windows
         self.wm = WindowManagement()
+        self.gm = GameVision()
         for i in range(number_windows):
             env = Env(self.wm, i, self.data_for_window)
             self.envs.append(env)
 
+    def start_game(self, window_num):
+        pass
+
+    def play_again(self, window_num):
+        pass
 
     def data_for_window(self, window_num):
-        return [window_num]
+
         self.wm.focus_window(window_num)
         screenshot = self.wm.screenshot()
-    
-    def get_environments(self):
-        return self.envs
+
+        self.wm.defocus_window(window_num)
 
     
+
 
 if __name__ == "__main__":
-    number_of_windows = 1
-    master = Master(1)
+    number_of_windows = 4
+    master = Master(number_of_windows)
     neats = NeatClass(master.envs)
     neats.neat_algorithm()
 
