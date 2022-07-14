@@ -18,6 +18,7 @@ class Env(object):
         [0,0]
     ]
     data_grabber = None
+    screenshot_grabber = None
 
     TURRETS_COST = GLOBAL_VALUES['turrets']
     TROOPS_COST = GLOBAL_VALUES['troops']
@@ -34,10 +35,11 @@ class Env(object):
     ]
     
 
-    def __init__(self, window_manager, assigned_window, data_grabber) -> None:
+    def __init__(self, window_manager, assigned_window, data_grabber, screenshot_grabber) -> None:
         self.window_manager = window_manager
         self.assigned_window = assigned_window
         self.data_grabber = data_grabber
+        self.screenshot_grabber = screenshot_grabber
         
     def go_back(self):
         pos = self.MOUSE_VALUES['back']
@@ -144,6 +146,7 @@ class Env(object):
             self.slots [self.total_slots] = 0
             return True
         return False
+
     def sell_turret_activate(self):
         pos = self.MOUSE_VALUES['sell_turret']
         pg.moveTo(*pos)
@@ -217,6 +220,17 @@ class Env(object):
     def get_inputs(self):
         inputs = self.data_grabber(self.assigned_window)
         return inputs
+
+    def screenshot(self):
+        screenshot = self.screenshot_grabber(self.assigned_window)
+        return screenshot
+
+    def start_game(self, window_num):
+        pass
+
+
+    def play_again(self, window_num):
+        pass
 
     
   

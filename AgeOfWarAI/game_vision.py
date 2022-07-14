@@ -5,6 +5,9 @@ from PIL import Image, ImageOps, ImageFilter
 from pytesseract import pytesseract
 from pytesseract import Output
 from utils import *
+import warnings
+from game_environment import Env
+import time
 
 class GameVision(object):
 
@@ -85,8 +88,7 @@ class GameVision(object):
 
         result = cv2.matchTemplate(img, template, method)
         #print(result)pr
-        # cv2.imshow("",img)
-        # cv2.waitKey()
+        
 
         if method == cv2.TM_SQDIFF_NORMED:
             locations = np.where(result <= treshold)
@@ -98,36 +100,57 @@ class GameVision(object):
         return locations
 
 
+    def scan_money_and_xp(self, env = None):
+        if env == None:
+            class Dummy(object):
+                money = 175
+                xp = 0
+            env = Dummy()
 
-    def scan_money_and_xp(self):
+        self.env = env
         template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
-        img = cv2.imread('AgeOfWarAI/assets/test1.png') # change
+        
+        img = self.screenshot
+        img = img[:-700,600:-1400]
+
+        # img = cv2.imread('0.png') # change
+
+        #cv2.imwrite("game0",img)
+
         result = self.get_position(img=img, template=template, treshold=0.95)
         if len(result)==0:
-            raise("Didn't find any match coin and exp scan money function")
+            warnings.warn("Didn't find any match coin and exp scan money function")
+            return env.money, env.xp
         result = result[0]
         
+      
 
         top_left = result
         bottom_right = (result[0] + 150, result[1] + 75)
-        cv2.rectangle(img, top_left,bottom_right, (0,255,0))
 
         img_money = img[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
         img_money_gray = cv2.cvtColor(img_money, cv2.COLOR_BGR2GRAY)
-        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*5,img_money_gray.shape[0]*5) )
-
-        result1 = self.analyzie_image(img_money_gray)
+        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*2,img_money_gray.shape[0]*2) )
+        
+        
+        result1 = self.analyzie_image(img_money_gray) # 0.25sec
+        
+        indices_aux = np.where((img_money_gray<70))
+        img_money_gray[indices_aux] = 182
 
         indices_first = np.where(img_money_gray>200)
         indices_second = np.where((img_money_gray>75)&(img_money_gray<120) )
-
+       
+        #time1 = time.time()
         img_money_gray[:,:] = 255
         
         img_money_gray[indices_first] = 0
         img_money_gray[indices_second] = 0
+
+        #time2 = time.time()
         
 
-        result2 = self.analyzie_image(img_money_gray)
+        result2 = self.analyzie_image(img_money_gray) # 0.25sec
   
         result1 = result1['text']
         result2 = result2['text']
@@ -138,21 +161,51 @@ class GameVision(object):
         xp_1 = self.env.xp
         xp_2 = self.env.xp
 
+        result1 = result1.replace("@","0")
+        result1 = result1.replace("©","0")
+
+        result2 = result2.replace("@","0")
+        result2 = result2.replace("©","0")
+
+
         try:
             money_1,xp_1 = result1.split()[1],result1.split()[3]
         except:
             money_1 = self.env.money
-            xp_1 = self.env.exp
+            xp_1 = self.env.xp
         
         try:
             money_2,xp_2 = result2.split()[1],result2.split()[3]
         except:
             money_2 = self.env.money
-            xp_2 = self.env.exp
+            xp_2 = self.env.xp
 
         money_finale = self.env.money
         xp_finale = self.env.xp
 
+        try:
+            money_1 = int(money_1)
+        except:
+            money_1 = -9999
+
+        try:
+            money_2 = int(money_2)
+        except:
+            money_2 = -9999
+
+        
+        try:
+            xp_1 = int(xp_1)
+        except:
+            xp_1 = -9999
+
+        try:
+            xp_2 = int(xp_2)
+        except:
+            xp_2 = -9999
+
+
+        # making up for the reading deficiencies of the values
         if money_1 == money_2:
             money_finale = money_1
         else:
@@ -169,7 +222,12 @@ class GameVision(object):
             else:
                 xp_finale = xp_2
 
-        return (money_finale, xp_finale)
+
+        if money_finale == -9999: money_finale = self.env.money
+        if xp_finale == -9999: xp_finale = self.env.xp
+        
+        
+        return money_finale, xp_finale
         
         #since the scan is not perfect we match the results
 
@@ -183,6 +241,9 @@ class GameVision(object):
     
 
     def initial_scan_health(self):
+        self.player_health_position = (700, 279)
+        self.enemy_health_position = (2530, 279)
+        return
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
         img = self.screenshot # change
         #img = cv2.imread(f'AgeOfWarAI/assets/tests/test1.png')
@@ -204,8 +265,7 @@ class GameVision(object):
             self.player_health_position = new_positions[0]
             self.enemy_health_position = new_positions[1]
         else:
-            self.player_health_position = (700, 279)
-            self.enemy_health_position = (2530, 279)
+            pass
         # print(new_positions[0])
         # print(new_positions[1])
         # print("new")
@@ -217,6 +277,7 @@ class GameVision(object):
         img = self.screenshot
 
         # I am adding an offset to eliminate some potentially hazardous values
+
         top_left = (5 + self.player_health_position[0],self.player_health_position[1])
         bottom_right = (-5 + self.player_health_position[0] + template.shape[1],self.player_health_position[1]+ template.shape[0])
         
@@ -263,7 +324,6 @@ class GameVision(object):
 
         return player_hp, enemy_hp
 
-
     def clustering_values(self, locations, treshold = 10, dimension = 0):
         new_locations = list()
      
@@ -302,11 +362,20 @@ class GameVision(object):
         cv2.imshow('Matches', img)
         cv2.waitKey()
 
-    def scan_troops(self, age:str = 'age1', flip = False):
+    def scan_troops(self, flip = False):
 
-        img = cv2.imread('AgeOfWarAI/assets/tests/test10.png') # change
+        
+        img = self.screenshot
+
+    
+        # img = cv2.imread('game0.png') # change
         img = img[600:-90,850:-200]
-        #img = cv2.flip(img, 1)
+        if flip:
+            img = cv2.flip(img, 1)
+
+        # cv2.imshow("",img)
+        # cv2.waitKey()
+        
 
         def first_age():
             #gets clubman and slinger together
@@ -323,13 +392,14 @@ class GameVision(object):
             locations_tier_1 = self.get_position(img, template_tier_1, threshold -.02 )
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.1)
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.05)
             locations_tier_2 = self.clustering_values(locations_tier_2)
+       
 
-            locations_tier_3 = self.get_position(img, template_tier_3, threshold )
+            locations_tier_3 = self.get_position(img, template_tier_3, threshold -.15 )
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
-            #self.visualize_locations(img, locations_tier_2)
+            # self.visualize_locations(img, locations_tier_3)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
         
@@ -434,20 +504,10 @@ class GameVision(object):
             
                 
         arr1, arr2, arr3, arr4, arr5 = first_age(), second_age(), third_age(), fourth_age(), fifth_age()
-
-        # print(arr1)
-        # print(arr2)
-        # print(arr3)
-        # print(arr4)
-        # print(arr5)
-
-        # cv2.imshow("img", img)
-        # cv2.waitKey()
-
+        
         return arr1, arr2, arr3, arr4, arr5
+        
 
-        # arr = third_age()
-        # print(arr)
 
     def scan_training(self):
         img = self.screenshot # change
@@ -480,8 +540,8 @@ if __name__ == "__main__":
 
     obj = GameVision()
 
-    obj.initial_scan_health()
-    #hp = obj.scan_health()
+    obj.scan_troops()
+
 
 
     pass

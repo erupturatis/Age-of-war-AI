@@ -4,18 +4,23 @@ Age of war AI
 
 inputs:
 
+number of troops in training (1 input)
 enemy hp - percent of total health (1 input)
 my hp - percent of total health (1 input)
 money - normalized by basic unit cost (money/cost_of_basic_unit) (1 input)
 xp - can upgrade age or not (1 input)
 can activate ability - 0 to 1 cooldown (1 input)
-where is the current battle taking place(0-1 your base to enemy base) (1 input)
 my troops on ground type 1,2,3,4 (4 input)
 enemy troops on ground type 1,2,3,4 (4 inputs)
 number of available cannon slots (1 input)
 player age - one hot encoded (5 inputs)
-number of troops in training (1 input)
-array with cannon and cannons age (max 4) (1 input for type since they get progressively stronger and 1 input for cannon age)(2 for each slot)  (8 inputs) 
+array with turrets and turrets age (max 4) (1 input for type since they get progressively 
+stronger and 1 input for cannon age)(2 for each slot)  (8 inputs) 
+
+
+where is the current battle taking place(0-1 your base to enemy base) (1 input)
+
+
 
 8 + 1 + 1 + 1 + 4 + 4 + 1 + 1 + 5 + 1 + 1 + 1 + 1 = 30 inputs
 

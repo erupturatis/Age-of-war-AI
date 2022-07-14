@@ -22,7 +22,7 @@ class WindowManagement(object):
 
         im = pyautogui.screenshot(region=(0,0,2600,885))
         opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
-        cv2.imwrite(f'{image_title}.png', opencvImage)
+        #cv2.imwrite(f'{image_title}.png', opencvImage)
         return opencvImage
 
     def defocus_window(self, number=0):
