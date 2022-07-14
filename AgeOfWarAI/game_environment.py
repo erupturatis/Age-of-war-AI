@@ -4,13 +4,14 @@ from GLOBALS import GLOBAL_VALUES
 
 class Env(object):
     assigned_window = 0
-    age = 1
+    age = 2
     ability_used = None
     money = 175
     xp = 0
     available_slots = 1
     total_slots = 1
     slots = [0,None,None,None]
+
     turrets = [
         [0,0],
         [0,0],

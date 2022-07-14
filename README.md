@@ -16,10 +16,7 @@ number of available cannon slots (1 input)
 player age - one hot encoded (5 inputs)
 array with turrets and turrets age (max 4) (1 input for type since they get progressively 
 stronger and 1 input for cannon age)(2 for each slot)  (8 inputs) 
-
-
 where is the current battle taking place(0-1 your base to enemy base) (1 input)
-
 
 
 8 + 1 + 1 + 1 + 4 + 4 + 1 + 1 + 5 + 1 + 1 + 1 + 1 = 30 inputs

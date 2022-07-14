@@ -15,6 +15,8 @@ class GameVision(object):
     screenshot = None
     player_health_position = None
     enemy_health_position = None
+    maximum = 0
+    width = 0
 
     def __init__(self) -> None:
         pass
@@ -87,8 +89,6 @@ class GameVision(object):
     def get_position(self, img, template, treshold, method = cv2.TM_CCOEFF_NORMED):
 
         result = cv2.matchTemplate(img, template, method)
-        #print(result)pr
-        
 
         if method == cv2.TM_SQDIFF_NORMED:
             locations = np.where(result <= treshold)
@@ -160,6 +160,11 @@ class GameVision(object):
 
         xp_1 = self.env.xp
         xp_2 = self.env.xp
+        print("results1")
+        print(result1)
+        print("results2")
+        print(result2)
+        
 
         result1 = result1.replace("@","0")
         result1 = result1.replace("©","0")
@@ -204,23 +209,13 @@ class GameVision(object):
         except:
             xp_2 = -9999
 
+        print(f"money {money_1}  {money_2}")
+        print(f"xp {xp_1}  {xp_2} \n")
+        
 
         # making up for the reading deficiencies of the values
-        if money_1 == money_2:
-            money_finale = money_1
-        else:
-            if(abs(self.env.money-money_1) < abs (self.env.money - money_2)) :
-                money_finale = money_1
-            else:
-                money_finale = money_2
-
-        if xp_1 == xp_2:
-            xp_finale = xp_1
-        else:
-            if(abs(self.env.xp-xp_1) < abs (self.env.xp - xp_2)) :
-                xp_finale = xp_1
-            else:
-                xp_finale = xp_2
+        money_finale = money_2# money2 is consistently more accurate
+        xp_finale = xp_1
 
 
         if money_finale == -9999: money_finale = self.env.money
@@ -361,13 +356,16 @@ class GameVision(object):
             
         cv2.imshow('Matches', img)
         cv2.waitKey()
-
-    def scan_troops(self, flip = False):
-
-        
-        img = self.screenshot
-
     
+    def maximum_width(self, array):
+        mx = 0
+        for i in array:
+            mx = max(mx,i[0])
+        return mx
+
+
+    def scan_troops(self, flip = False, age = 1):
+        img = self.screenshot
         # img = cv2.imread('game0.png') # change
         img = img[600:-90,850:-200]
         if flip:
@@ -376,6 +374,7 @@ class GameVision(object):
         # cv2.imshow("",img)
         # cv2.waitKey()
         
+  
 
         def first_age():
             #gets clubman and slinger together
@@ -392,13 +391,14 @@ class GameVision(object):
             locations_tier_1 = self.get_position(img, template_tier_1, threshold -.02 )
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
-            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.05)
+            locations_tier_2 = self.get_position(img, template_tier_2, threshold -.1)
             locations_tier_2 = self.clustering_values(locations_tier_2)
        
 
             locations_tier_3 = self.get_position(img, template_tier_3, threshold -.15 )
             locations_tier_3 = self.clustering_values(locations_tier_3)
-
+            
+            self.maximum = max(self.maximum,self.maximum_width(locations_tier_1),self.maximum_width(locations_tier_2),self.maximum_width(locations_tier_3))
             # self.visualize_locations(img, locations_tier_3)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
@@ -423,7 +423,8 @@ class GameVision(object):
             locations_tier_3 = self.get_position(img, template_tier_3, threshold -.15)
             locations_tier_3 = self.clustering_values(locations_tier_3)
             #self.visualize_locations(img, locations_tier_1)
-
+            self.maximum = max(self.maximum,self.maximum_width(locations_tier_1),self.maximum_width(locations_tier_2),self.maximum_width(locations_tier_3))
+            
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
 
         def third_age():
@@ -445,7 +446,7 @@ class GameVision(object):
             locations_tier_3 = self.get_position(img, template_tier_3, threshold - .05)
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
-            
+            self.maximum = max(self.maximum,self.maximum_width(locations_tier_1),self.maximum_width(locations_tier_2),self.maximum_width(locations_tier_3))
             #self.visualize_locations(img, locations_tier_3)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3)]
@@ -469,8 +470,7 @@ class GameVision(object):
             locations_tier_3 = self.get_position(img, template_tier_3, threshold)
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
-            
-            #self.visualize_locations(img, locations_tier_2)
+            self.maximum = max(self.maximum,self.maximum_width(locations_tier_1),self.maximum_width(locations_tier_2),self.maximum_width(locations_tier_3))#self.visualize_locations(img, locations_tier_2)
 
             return [len(locations_tier_1) - len(locations_tier_2), len(locations_tier_2), len(locations_tier_3)]
 
@@ -496,16 +496,27 @@ class GameVision(object):
 
             locations_tier_4 = self.get_position(img, template_tier_4, threshold -.15)
             locations_tier_4 = self.clustering_values(locations_tier_4)
-
-            #self.visualize_locations(img, locations_tier_2)
+           
+            self.maximum = max(self.maximum,self.maximum_width(locations_tier_1),self.maximum_width(locations_tier_2),self.maximum_width(locations_tier_3))         #self.visualize_locations(img, locations_tier_2)
 
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3), len(locations_tier_4)]
+       
+        res = None
 
-            
-                
-        arr1, arr2, arr3, arr4, arr5 = first_age(), second_age(), third_age(), fourth_age(), fifth_age()
-        
-        return arr1, arr2, arr3, arr4, arr5
+        if age == 1:
+            res = [0,0,0], first_age()
+        elif age == 2:
+            res = first_age(), second_age()
+        elif age == 3:
+            res = second_age(), third_age()
+        elif age == 4:
+            res = third_age(), fourth_age()
+        elif age == 5:
+            res = fourth_age(), fifth_age()
+
+        self.width = img.shape[1]
+
+        return res
         
 
 
