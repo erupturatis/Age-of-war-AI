@@ -160,10 +160,10 @@ class GameVision(object):
 
         xp_1 = self.env.xp
         xp_2 = self.env.xp
-        print("results1")
-        print(result1)
-        print("results2")
-        print(result2)
+        # print("results1")
+        # print(result1)
+        # print("results2")
+        # print(result2)
         
 
         result1 = result1.replace("@","0")
@@ -209,8 +209,8 @@ class GameVision(object):
         except:
             xp_2 = -9999
 
-        print(f"money {money_1}  {money_2}")
-        print(f"xp {xp_1}  {xp_2} \n")
+        # print(f"money {money_1}  {money_2}")
+        # print(f"xp {xp_1}  {xp_2} \n")
         
 
         # making up for the reading deficiencies of the values
@@ -461,7 +461,7 @@ class GameVision(object):
 
             threshold = 0.9
 
-            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.2)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.25)
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
             locations_tier_2 = self.get_position(img, template_tier_2, threshold - .2)
@@ -485,7 +485,7 @@ class GameVision(object):
 
             threshold = 0.9
 
-            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.15)
+            locations_tier_1 = self.get_position(img, template_tier_1, threshold -.2)
             locations_tier_1 = self.clustering_values(locations_tier_1)
 
             locations_tier_2 = self.get_position(img, template_tier_2, threshold -.2)
@@ -526,7 +526,7 @@ class GameVision(object):
                 res =  fifth_age()
 
         self.width = img.shape[1]
-
+        #print(res)
         return res
         
 
@@ -554,7 +554,8 @@ class GameVision(object):
         return len(locations)
     
     def scan_age(self, flip = False):
-        img = cv2.imread('AgeOfWarAI/assets/tests/test0.png')
+        img = self.screenshot
+        #img = cv2.imread('AgeOfWarAI/assets/tests/test00.png')
         template1 = cv2.imread('AgeOfWarAI/assets/misc/age1base.png')
         template2 = cv2.imread('AgeOfWarAI/assets/misc/age2base.png')
         template3 = cv2.imread('AgeOfWarAI/assets/misc/age3base.png')
@@ -566,19 +567,20 @@ class GameVision(object):
             img = cv2.flip(img,1)
         
         img = img[:,:-1600]
-        result = self.get_position(img, template1, 0.9)
+        result = self.get_position(img, template1, 0.8)
+        #self.visualize_locations(img , result)
         if len(result)>=1:
             return 1
-        result = self.get_position(img, template2, 0.9)
+        result = self.get_position(img, template2, 0.8)
         if len(result)>=1:
             return 2
-        result = self.get_position(img, template3, 0.9)
+        result = self.get_position(img, template3, 0.8)
         if len(result)>=1:
             return 3
-        result = self.get_position(img, template4, 0.9)
+        result = self.get_position(img, template4, 0.8)
         if len(result)>=1:
             return 4
-        result = self.get_position(img, template5, 0.9)
+        result = self.get_position(img, template5, 0.8)
         if len(result)>=1:
             return 5
 
@@ -589,7 +591,7 @@ if __name__ == "__main__":
     #obj1.screenshot()
 
     obj = GameVision()
-    print(obj.scan_age())
+    print(obj.scan_age(True))
 
     pass
 

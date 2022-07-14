@@ -44,11 +44,11 @@ class Master(object):
     def save_data_packets(self, window_num):
         img = self.screenshots[window_num]
         data = self.data[window_num]
-        if not os.path.exists(f"data_samples/sample{window_num}"):
-            os.makedirs(f"data_samples/sample{window_num}")
+        if not os.path.exists(f"data_samples/sample{self.scans}"):
+            os.makedirs(f"data_samples/sample{self.scans}")
 
-        cv2.imwrite(f"data_samples/sample{window_num}/image{self.scans}.png", img)
-        with open(f'data_samples/sample{window_num}/data{self.scans}.txt', 'w') as f:
+        cv2.imwrite(f"data_samples/sample{self.scans}/image{self.scans}.png", img)
+        with open(f'data_samples/sample{self.scans}/data{self.scans}.txt', 'w') as f:
             for elem in data:
                 f.write(f"{elem}")
                 f.write("\n")
@@ -77,12 +77,13 @@ class Master(object):
         
         ability = env.check_ability_avalability()
         
-        max_player = 0
-        max_enemy = 1
+        max_player = 1
+        max_enemy = 0
         if env.player_aged_recently > 0:
             # also checks for troops from previous age
             env.player_aged_recently -= 1 
             arr1,arr2 = gm.scan_troops(False, env.age, True)
+            
             max_player = gm.maximum / gm.width
             gm.maximum = 0
             
@@ -108,7 +109,7 @@ class Master(object):
         
         if env.enemy_aged_recently > 0:
             env.enemy_aged_recently -= 1
-            arr1,arr2 = gm.scan_troops(True)
+            arr1,arr2 = gm.scan_troops(True, env.enemy_age, True)
             max_enemy = gm.maximum / gm.width
             gm.maximum = 0
 
@@ -121,7 +122,7 @@ class Master(object):
             else:
                 enemy_troops_total.append(0)
         else:
-            arr1 = gm.scan_troops(True)
+            arr1 = gm.scan_troops(True, env.enemy_age, False)
             max_enemy = gm.maximum / gm.width
             gm.maximum = 0
 
@@ -132,7 +133,9 @@ class Master(object):
             else:
                 enemy_troops_total.append(0)
 
+      
         battle_place = min(max_player, 1-max_enemy)
+      
 
         slots_available = env.available_slots
 
@@ -142,7 +145,7 @@ class Master(object):
         age[env.age-1] = 1
 
         enemy_age_index = gm.scan_age(flip = True)
-        print(enemy_age_index)
+
         if env.enemy_age != enemy_age_index:
             env.enemy_age = enemy_age_index
             env.enemy_aged_recently = 5
