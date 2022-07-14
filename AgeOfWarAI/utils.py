@@ -5,8 +5,8 @@ import numpy as np
 
 class WindowManagement(object):
     windows = None
-    def __init__(self) -> None:
-        self.windows = pyautogui.getWindowsWithTitle("Adobe Flash Player 13")
+    def __init__(self, title = "Adobe Flash Player 32") -> None:
+        self.windows = pyautogui.getWindowsWithTitle(title)
 
     def focus_window(self, number=0):
 
@@ -41,4 +41,8 @@ def get_mouse_position():
 
 def plot_graph(values):
     pass
+
+if __name__ == "__main__":
+    a = WindowManagement("Adobe Flash Player 32")
+    a.focus_window(0)
 

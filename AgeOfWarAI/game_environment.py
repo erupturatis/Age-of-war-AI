@@ -4,7 +4,11 @@ from GLOBALS import GLOBAL_VALUES
 
 class Env(object):
     assigned_window = 0
-    age = 2
+    age = 1
+    enemy_age = 1
+    player_aged_recently = 0 # also scanning the previous age for this amount of times
+    enemy_aged_recently = 0
+
     ability_used = None
     money = 175
     xp = 0
@@ -52,6 +56,7 @@ class Env(object):
             pos = self.MOUSE_VALUES['special']
             pg.moveTo(*pos)
             pg.click()
+            self.player_aged_recently = 5
             self.age += 1
             return True
         return False

@@ -10,7 +10,7 @@ class NeatClass(object):
         self.envs = envs
 
     def neat_algorithm(self):
-        for i in range(10):
+        for i in range(100):
             time1 = time.time()
             for i in range(self.number_of_envs):
                 
@@ -27,6 +27,8 @@ class NeatClass(object):
                 print(f"startedt {i} environment")
                 env = self.envs[i]
                 inputs = env.get_inputs()
+
+            #time.sleep(3)
 
 
             

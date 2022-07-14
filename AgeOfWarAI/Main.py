@@ -4,6 +4,7 @@ from game_vision import GameVision
 from neat_program import NeatClass
 from time import time
 import time
+import os
 # about 0.25 seconds per screenshot
 # 4 windows would mean an action per second which should be enough
 
@@ -43,8 +44,11 @@ class Master(object):
     def save_data_packets(self, window_num):
         img = self.screenshots[window_num]
         data = self.data[window_num]
-        cv2.imwrite(f"data_samples/image{self.scans}.png", img)
-        with open(f'data_samples//data{self.scans}.txt', 'w') as f:
+        if not os.path.exists(f"data_samples/sample{window_num}"):
+            os.makedirs(f"data_samples/sample{window_num}")
+
+        cv2.imwrite(f"data_samples/sample{window_num}/image{self.scans}.png", img)
+        with open(f'data_samples/sample{window_num}/data{self.scans}.txt', 'w') as f:
             for elem in data:
                 f.write(f"{elem}")
                 f.write("\n")
@@ -60,10 +64,11 @@ class Master(object):
         time1 = time.time()
         gm = self.gms[window_num] 
         gm.screenshot = self.screenshots[window_num]
+
         in_train = gm.scan_training()
-        
+
         gm.initial_scan_health()
-        
+
         player_health, enemy_health = gm.scan_health() # not meaningful time
         
         env = self.envs[window_num]
@@ -72,35 +77,60 @@ class Master(object):
         
         ability = env.check_ability_avalability()
         
-        
-        
-        arr1,arr2 = gm.scan_troops(False, env.age)
-        max_player = gm.maximum / gm.width
-        gm.maximum = 0
-        
-        player_troops_total = list()
-        # about 0.4-0.5 seconds
-        
-        for i in range(3):
-            player_troops_total.append(arr1[i] + arr2[i])
+        max_player = 0
+        max_enemy = 1
+        if env.player_aged_recently > 0:
+            # also checks for troops from previous age
+            env.player_aged_recently -= 1 
+            arr1,arr2 = gm.scan_troops(False, env.age, True)
+            max_player = gm.maximum / gm.width
+            gm.maximum = 0
+            
+            player_troops_total = list()
+            for i in range(3):
+                player_troops_total.append(arr1[i] + arr2[i])
 
-        if env.age == 5:
-            player_troops_total.append(arr2[3])
+            if env.age == 5:
+                player_troops_total.append(arr2[3])
+            else:
+                player_troops_total.append(0)
         else:
-            player_troops_total.append(0)
+            arr1 = gm.scan_troops(False, env.age, False)
+            max_player = gm.maximum / gm.width
+            gm.maximum = 0
+            
+            player_troops_total = arr1
+
+            if env.age == 5:
+                player_troops_total.append(arr1[3])
+            else:
+                player_troops_total.append(0)
         
-        arr1,arr2 = gm.scan_troops(True)
-        max_enemy = gm.maximum / gm.width
-        gm.maximum = 0
+        if env.enemy_aged_recently > 0:
+            env.enemy_aged_recently -= 1
+            arr1,arr2 = gm.scan_troops(True)
+            max_enemy = gm.maximum / gm.width
+            gm.maximum = 0
 
-        enemy_troops_total = list()
-        for i in range(3):
-            enemy_troops_total.append(arr1[i] + arr2[i])
+            enemy_troops_total = list()
+            for i in range(3):
+                enemy_troops_total.append(arr1[i] + arr2[i])
 
-        if env.age == 5:
-            enemy_troops_total.append(arr2[3])
+            if env.age == 5:
+                enemy_troops_total.append(arr2[3])
+            else:
+                enemy_troops_total.append(0)
         else:
-            enemy_troops_total.append(0)
+            arr1 = gm.scan_troops(True)
+            max_enemy = gm.maximum / gm.width
+            gm.maximum = 0
+
+            enemy_troops_total = arr1
+            
+            if env.age == 5:
+                enemy_troops_total.append(arr1[3])
+            else:
+                enemy_troops_total.append(0)
 
         battle_place = min(max_player, 1-max_enemy)
 
@@ -110,6 +140,15 @@ class Master(object):
 
         age = [0,0,0,0,0]
         age[env.age-1] = 1
+
+        enemy_age_index = gm.scan_age(flip = True)
+        print(enemy_age_index)
+        if env.enemy_age != enemy_age_index:
+            env.enemy_age = enemy_age_index
+            env.enemy_aged_recently = 5
+
+        enemy_age = [0,0,0,0,0]
+        enemy_age[enemy_age_index-1] = 1
 
         self.wm.defocus_window(window_num)
         time2 = time.time()
@@ -127,6 +166,8 @@ class Master(object):
             ["enemy troops",enemy_troops_total],
             ["available slots", slots_available],
             ["player age", age],
+            ["enemy age",enemy_age],
+            ["enemy age recently", env.enemy_aged_recently],
             ["turrets", turrets],
         ]
         self.data[window_num] = data_packet
@@ -134,10 +175,9 @@ class Master(object):
 
         env.money = money
         env.xp = xp
-        
+
         self.scans += 1
     
-
 
 if __name__ == "__main__":
     number_of_windows = 1

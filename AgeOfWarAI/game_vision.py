@@ -364,7 +364,7 @@ class GameVision(object):
         return mx
 
 
-    def scan_troops(self, flip = False, age = 1):
+    def scan_troops(self, flip = False, age = 1, aged_recently = False):
         img = self.screenshot
         # img = cv2.imread('game0.png') # change
         img = img[600:-90,850:-200]
@@ -502,17 +502,28 @@ class GameVision(object):
             return [len(locations_tier_1), len(locations_tier_2), len(locations_tier_3), len(locations_tier_4)]
        
         res = None
-
-        if age == 1:
-            res = [0,0,0], first_age()
-        elif age == 2:
-            res = first_age(), second_age()
-        elif age == 3:
-            res = second_age(), third_age()
-        elif age == 4:
-            res = third_age(), fourth_age()
-        elif age == 5:
-            res = fourth_age(), fifth_age()
+        if aged_recently:
+            if age == 1:
+                res = [0,0,0], first_age()
+            elif age == 2:
+                res = first_age(), second_age()
+            elif age == 3:
+                res = second_age(), third_age()
+            elif age == 4:
+                res = third_age(), fourth_age()
+            elif age == 5:
+                res = fourth_age(), fifth_age()
+        else:
+            if age == 1:
+                res = first_age()
+            elif age == 2:
+                res = second_age()
+            elif age == 3:
+                res =  third_age()
+            elif age == 4:
+                res =  fourth_age()
+            elif age == 5:
+                res =  fifth_age()
 
         self.width = img.shape[1]
 
@@ -541,7 +552,35 @@ class GameVision(object):
         # cv2.imshow("img",img)
         # cv2.waitKey()
         return len(locations)
+    
+    def scan_age(self, flip = False):
+        img = cv2.imread('AgeOfWarAI/assets/tests/test0.png')
+        template1 = cv2.imread('AgeOfWarAI/assets/misc/age1base.png')
+        template2 = cv2.imread('AgeOfWarAI/assets/misc/age2base.png')
+        template3 = cv2.imread('AgeOfWarAI/assets/misc/age3base.png')
+        template4 = cv2.imread('AgeOfWarAI/assets/misc/age4base.png')
+        template5 = cv2.imread('AgeOfWarAI/assets/misc/age5base.png')
 
+        img = img[700:,600:]
+        if flip:
+            img = cv2.flip(img,1)
+        
+        img = img[:,:-1600]
+        result = self.get_position(img, template1, 0.9)
+        if len(result)>=1:
+            return 1
+        result = self.get_position(img, template2, 0.9)
+        if len(result)>=1:
+            return 2
+        result = self.get_position(img, template3, 0.9)
+        if len(result)>=1:
+            return 3
+        result = self.get_position(img, template4, 0.9)
+        if len(result)>=1:
+            return 4
+        result = self.get_position(img, template5, 0.9)
+        if len(result)>=1:
+            return 5
 
 
 
@@ -550,10 +589,7 @@ if __name__ == "__main__":
     #obj1.screenshot()
 
     obj = GameVision()
-
-    obj.scan_troops()
-
-
+    print(obj.scan_age())
 
     pass
 
