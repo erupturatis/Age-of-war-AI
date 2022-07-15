@@ -119,7 +119,7 @@ class GameVision(object):
 
         result = self.get_position(img=img, template=template, treshold=0.95)
         if len(result)==0:
-            warnings.warn("Didn't find any match coin and exp scan money function")
+            raise("Didn't find any match coin and exp scan money function")
             return env.money, env.xp
         result = result[0]
         
@@ -130,8 +130,9 @@ class GameVision(object):
 
         img_money = img[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
         img_money_gray = cv2.cvtColor(img_money, cv2.COLOR_BGR2GRAY)
-        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*2,img_money_gray.shape[0]*2) )
-        
+        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*3,img_money_gray.shape[0]*2) )
+       
+
         
         result1 = self.analyzie_image(img_money_gray) # 0.25sec
         
@@ -209,14 +210,16 @@ class GameVision(object):
         except:
             xp_2 = -9999
 
-        # print(f"money {money_1}  {money_2}")
-        # print(f"xp {xp_1}  {xp_2} \n")
+        print(f"money {money_1}  {money_2}")
+        print(f"xp {xp_1}  {xp_2} \n")
         
+        if money_2 < money_1:
+            money_2 = money_1 # you never get values bigger than the actual value
 
-        # making up for the reading deficiencies of the values
-        money_finale = money_2# money2 is consistently more accurate
-        xp_finale = xp_1
-
+        money_finale = money_2
+        # money1 is consistently more accurate
+        if xp_1 > xp_finale:
+            xp_finale = xp_1
 
         if money_finale == -9999: money_finale = self.env.money
         if xp_finale == -9999: xp_finale = self.env.xp

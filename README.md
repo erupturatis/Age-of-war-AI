@@ -50,3 +50,8 @@ If you want to modify the game resoltion you will have to change the assets size
 
 You can download the archive I used for the game from here:
 
+Reward
++1 for valid actions (including wait)
++0.2 for each iteration it's still alive
++1000 for winning
+

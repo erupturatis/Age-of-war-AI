@@ -68,7 +68,7 @@ GLOBAL_VALUES = {
         "tier1":(1550,100),
         "tier2":(1620,100),
         "tier3":(1675,100),
-        "tier3":(1745,100),
+        "tier4":(1745,100),
         "train_units":(1520,100),
         "get_turret":(1600,100),
         "sell_turret":(1675,100),

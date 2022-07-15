@@ -40,11 +40,10 @@ class Env(object):
     ]
     
 
-    def __init__(self, window_manager, assigned_window, data_grabber, screenshot_grabber) -> None:
+    def __init__(self, window_manager, assigned_window, master) -> None:
         self.window_manager = window_manager
         self.assigned_window = assigned_window
-        self.data_grabber = data_grabber
-        self.screenshot_grabber = screenshot_grabber
+        self.master = master
         
     def go_back(self):
         pos = self.MOUSE_VALUES['back']
@@ -67,11 +66,14 @@ class Env(object):
         pg.click()
 
     def spawn_troop(self, tier):
-        if self.money > self.TROOPS_COST[self.age][f'tier{tier}']:
+
+        if self.money >= self.TROOPS_COST[self.age][f'tier{tier}']:
             self.access_troops()
+            print("troops accesed")
             pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
             pg.click()
+            print("clicked")
             self.go_back()
             return True
         return False
@@ -96,18 +98,19 @@ class Env(object):
         pg.click()
 
     def spawn_turret(self, tier):
-        if self.money > self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots>0:
+
+        if self.money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots>0:
             self.access_turret()
             pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
             pg.click()
             slot = None
-
+            
             for i,x in enumerate(self.slots):
                 if x == 0:
                     slot = i
                     break
-            
+            print(f"spawning turret tier {tier} on slot {slot}")
             pos = self.MOUSE_VALUES[f'turret_spot{i}']
             pg.moveTo(*pos)
             pg.click()
@@ -143,7 +146,8 @@ class Env(object):
         return False
 
     def add_turret_slot(self):
-        if self.money > GLOBAL_VALUES["turret_slots"][self.total_slots]:
+        if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots]:
+            self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots]
             pos = self.MOUSE_VALUES['buy_spot']
             pg.moveTo(*pos)
             pg.click()
@@ -162,6 +166,7 @@ class Env(object):
         if self.slots[number] == 1:
             self.sell_turret_activate()
             pos = self.MOUSE_VALUES[f'turret_spot{number}']
+            print(f"selling turret on slot {number}")
             pg.moveTo(*pos)
             pg.click()
             self.turrets[number] = [0,0]
@@ -196,8 +201,9 @@ class Env(object):
             [0,0]
         ]
 
-    def pass_actions(self, action):
+    def take_action(self, action):
         action = self.ACTIONS[action]
+        print(f"trying to do action {action}")
         ACTIONS_DICT = {
             "troop_tier1":self.spawn_troop1, 
             "troop_tier2":self.spawn_troop2, 
@@ -214,22 +220,33 @@ class Env(object):
             "evolve":self.upgrade_age,
             "wait":self.nothing,
         }
-        print(f"{self.assigned_window} with action {action}")
+        #print(f"{self.assigned_window} with action {action}")
         action = ACTIONS_DICT[action]
         res = action()
-        print(res)
+        return res
 
 
     def nothing(self):
         pass
 
+
     def get_inputs(self):
-        inputs = self.data_grabber(self.assigned_window)
+        inputs = self.master.data_for_window(self.assigned_window)
         return inputs
 
+
     def screenshot(self):
-        screenshot = self.screenshot_grabber(self.assigned_window)
+        screenshot = self.master.screenshot(self.assigned_window)
         return screenshot
+
+
+    def focus(self):
+        self.master.focus(self.assigned_window)
+
+
+    def defocus(self):
+        self.master.defocus(self.assigned_window)
+
 
     def start_game(self, window_num):
         pass

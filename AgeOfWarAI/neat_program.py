@@ -1,6 +1,6 @@
 import neat
 import time
-
+import numpy as np
 class NeatClass(object):
     envs = None
     number_of_envs = None
@@ -8,28 +8,29 @@ class NeatClass(object):
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
         self.envs = envs
-
-    def neat_algorithm(self):
-        for i in range(200):
+    def random_actions(self):
+        for i in range(100):
             time1 = time.time()
             for i in range(self.number_of_envs):
                 
                 env = self.envs[i]
-                screenshot = env.screenshot()
-                
-                #print(f"{i} and input {inputs}")
-            #takes 0.25 per screenshot
-            #takes 0.15 er windows focus and defocus
-            time2 = time.time()
-            # print(f'total time for screenshots {time2 - time1} to {i}')
-
-            for i in range(self.number_of_envs):
-                print(f"startedt {i} environment")
-                env = self.envs[i]
+                # screenshot = env.screenshot()
+                env.focus()
                 inputs = env.get_inputs()
 
-            time.sleep(6)
+                action = [] # pseudocode
+                action = np.random.rand(14)
+          
+                action[2] += 5
+                action = np.argmax(action)
+                Taken = env.take_action(action)
+                print(Taken)
+                env.defocus()
+                print("defocused")
+                print("\n")
+            # print(f"time taken for 1action {time.time()-time1}")
+            time.sleep(0.5)
+        print("finished actions")
 
-
-            
-        print("finished neat")
+    def neat_algorithm(self):
+        self.random_actions()
