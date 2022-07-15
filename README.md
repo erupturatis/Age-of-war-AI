@@ -20,7 +20,7 @@ stronger and 1 input for cannon age)(2 for each slot)  (8 inputs)
 where is the current battle taking place(0-1 your base to enemy base) (1 input)
 
 
-8 + 1 + 1 + 1 + 4 + 4 + 1 + 1 + 5 + 5 + 1 + 1 + 1 + 1 = 35 inputs
+8 + 1 + 1 + 1 + 4 + 4 + 1 + 1 + 5 + 5 + 1 + 1 + 1 + 1 = 34 inputs
 
 Maybe add other inputs?
 Enemy age one hot encoded

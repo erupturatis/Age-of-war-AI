@@ -21,7 +21,7 @@ class Master(object):
 
     scans = 0
 
-    def __init__(self, number_windows = 1) -> None:
+    def __init__(self, number_windows = 1, difficulty = 1) -> None:
 
         self.number_windows = number_windows
         self.wm = WindowManagement()
@@ -29,6 +29,7 @@ class Master(object):
         for i in range(number_windows):
             gm = GameVision()
             env = Env(self.wm, i, self)
+            env.difficulty = difficulty
 
             self.envs.append(env)
             self.gms.append(gm)
@@ -73,10 +74,16 @@ class Master(object):
         
         screenshot = self.wm.screenshot()
         self.screenshots[window_num] = screenshot
-
+        env = self.envs[window_num]
         time1 = time.time()
         gm = self.gms[window_num] 
         gm.screenshot = self.screenshots[window_num]
+
+        ended = gm.check_if_ended()
+        # print(ended)
+        if ended:
+            return None, True
+        money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
 
         in_train = gm.scan_training()
 
@@ -86,7 +93,7 @@ class Master(object):
         
         env = self.envs[window_num]
         
-        money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
+        
         
         ability = env.check_ability_avalability()
         
@@ -110,8 +117,10 @@ class Master(object):
                 player_troops_total.append(0)
         else:
             arr1 = gm.scan_troops(False, env.age, False)
-            max_player = gm.maximum / gm.width
-            gm.maximum = 0
+            if gm.maximum != 0:
+                max_player = gm.maximum / gm.width
+                gm.maximum = 0
+
             
             player_troops_total = arr1
 
@@ -137,8 +146,9 @@ class Master(object):
                 enemy_troops_total.append(0)
         else:
             arr1 = gm.scan_troops(True, env.enemy_age, False)
-            max_enemy = gm.maximum / gm.width
-            gm.maximum = 0
+            if gm.maximum != -0:
+                max_enemy = gm.maximum / gm.width
+                gm.maximum = 0
 
             enemy_troops_total = arr1
             
@@ -146,8 +156,9 @@ class Master(object):
                 enemy_troops_total.append(arr1[3])
             else:
                 enemy_troops_total.append(0)
-
-      
+        print("battle place")
+        print(max_player)
+        print(max_enemy)
         battle_place = min(max_player, 1-max_enemy)
       
 
@@ -195,35 +206,34 @@ class Master(object):
 
         money = money / tier1_cost
         xp = xp / GLOBAL_VALUES["experience"][env.age-1]
-        input = [
-            in_train,
-            player_health,
-            enemy_health,
-            money,
-            xp,
-            battle_place,
-            ability,
-            player_troops_total,
-            enemy_troops_total,
-            slots_available,
-            age,
-            enemy_age,
-            turrets
-        ]
+        if ability == True:
+            ability = 1
+        else:
+            ability = 0
+        new_turrets = list()
+        for turret in turrets:
+            tier,turr_age = turret[0], turret[1]
+            new_turrets.append(tier)
+            new_turrets.append(turr_age)
+        
+       
+        
+        inputs = (in_train, player_health, enemy_health, money,xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
+        data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
-        self.save_data_packets(window_num)
-
-        
-        
+        if self.scans % 10 == 0:
+            self.save_data_packets(window_num)
         self.scans += 1
+        return inputs, False
         
     
 
 if __name__ == "__main__":
     number_of_windows = 1
-    master = Master(number_of_windows)
+    difficulty = 3
+    master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
-    neats.neat_algorithm()
+    neats.main()
 
 
     

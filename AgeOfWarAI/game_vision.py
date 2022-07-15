@@ -100,6 +100,16 @@ class GameVision(object):
         return locations
 
 
+    def check_if_ended(self):
+        img = self.screenshot
+        template = cv2.imread(f'AgeOfWarAI/assets/misc/defeat.png')
+        result = self.get_position(img=img, template=template, treshold=0.9)
+
+        if len(result) > 0:
+            return True
+        return False
+
+
     def scan_money_and_xp(self, env = None):
         if env == None:
             class Dummy(object):
@@ -118,9 +128,11 @@ class GameVision(object):
         #cv2.imwrite("game0",img)
 
         result = self.get_position(img=img, template=template, treshold=0.95)
-        if len(result)==0:
-            raise("Didn't find any match coin and exp scan money function")
-            return env.money, env.xp
+   
+        if len(result) == 0:
+            raise("Game Paused")    
+                
+            
         result = result[0]
         
       
@@ -474,8 +486,8 @@ class GameVision(object):
             locations_tier_3 = self.clustering_values(locations_tier_3)
 
             self.maximum = max(self.maximum,self.maximum_width(locations_tier_1),self.maximum_width(locations_tier_2),self.maximum_width(locations_tier_3))#self.visualize_locations(img, locations_tier_2)
-
-            return [len(locations_tier_1) - len(locations_tier_2), len(locations_tier_2), len(locations_tier_3)]
+            first_tier = max(0,len(locations_tier_1) - len(locations_tier_2))
+            return [first_tier, len(locations_tier_2), len(locations_tier_3)]
 
         def fifth_age():
             #img = cv2.imread('AgeOfWarAI/assets/environment/age5troops.png') # change

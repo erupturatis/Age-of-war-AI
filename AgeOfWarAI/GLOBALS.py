@@ -1,6 +1,11 @@
 GLOBAL_VALUES = {
     "experience":[4000,14000,45000,20000, None],
     "turret_slots":[1000,3000,7500,None],
+    "restart":(1300,650),
+    "play":(1300,450),
+    "diff1":(1300, 370),
+    "diff2":(1300, 450),
+    "diff3":(1300, 530),
     "troops":[
         {
 

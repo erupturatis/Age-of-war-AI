@@ -43,6 +43,5 @@ def plot_graph(values):
     pass
 
 if __name__ == "__main__":
-    a = WindowManagement("Adobe Flash Player 32")
-    a.focus_window(0)
+    get_mouse_position()
 

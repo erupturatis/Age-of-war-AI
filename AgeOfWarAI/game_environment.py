@@ -3,6 +3,7 @@ import time
 from GLOBALS import GLOBAL_VALUES
 
 class Env(object):
+    difficulty = 1
     assigned_window = 0
     age = 1
     enemy_age = 1
@@ -247,13 +248,27 @@ class Env(object):
     def defocus(self):
         self.master.defocus(self.assigned_window)
 
+    def start_game(self):
+        print("starting game")
+        self.reset_everything()
+        pg.moveTo(*GLOBAL_VALUES["play"])
+        pg.click()
+        print("moved to play")
+        difficulty = self.difficulty
+        pg.moveTo(*GLOBAL_VALUES[f"diff{difficulty}"])
+        pg.click()
 
-    def start_game(self, window_num):
-        pass
+    def restart_game(self):
+        self.reset_everything()
+        pg.moveTo(*GLOBAL_VALUES[f"restart"])
+        pg.click()
 
+        pg.moveTo(*GLOBAL_VALUES["play"])
+        pg.click()
+        difficulty = self.difficulty
+        pg.moveTo(*GLOBAL_VALUES[f"diff{difficulty}"])
+        pg.click()
 
-    def play_again(self, window_num):
-        pass
 
     
   
