@@ -76,10 +76,13 @@ class NeatClass(object):
         self.genomes_list = list()
         self.networks = list()
         self.inactive_envs = list()
+        self.next_nn = 0
 
         for i in range(self.number_of_envs):
             env = self.envs[i]
             env.focus()
+            self.networks_training[i] = self.next_nn
+            self.next_nn += 1
             env.restart_game()
             env.defocus()
       
@@ -103,22 +106,26 @@ class NeatClass(object):
             interations += 1
             if interations % 10 == 0:
                 self.master.save_all_data_packets()
-            print(self.number_of_envs)
-            print(f"finished_envs {finished_envs}")
-            print(f"inactive_envs {self.inactive_envs}")
-            print(f"next neural network {self.next_nn}")
+            # print(self.number_of_envs)
+            # print(f"finished_envs {finished_envs}")
+            # print(f"inactive_envs {self.inactive_envs}")
+            # print(f"next neural network {self.next_nn}")
+            # print(f"atributed networks {self.networks_training}")
+
             for i in range(self.number_of_envs):
                 if self.inactive_envs[i] == 1:
                     continue
                 env = self.envs[i]
-                # screenshot = env.screenshot()
+  
                 env.focus()
                 inputs, ended = env.get_inputs()
-                # print(inputs, ended)
+      
                 if ended:
-                    if self.next_nn == self.POP_SIZE:
+                    if self.next_nn >= self.POP_SIZE:
                         finished_envs += 1
                         self.inactive_envs[i] = 1
+                        env.defocus()
+                      
                         if finished_envs == self.number_of_envs:
                             evaluating = False
                         continue

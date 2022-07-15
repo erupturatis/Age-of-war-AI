@@ -111,13 +111,13 @@ class Env(object):
                 if x == 0:
                     slot = i
                     break
-            print(f"spawning turret tier {tier} on slot {slot}")
             pos = self.MOUSE_VALUES[f'turret_spot{i}']
             pg.moveTo(*pos)
             pg.click()
 
             self.slots[i] = 1
             self.turrets[i] = [tier, self.age]
+            self.available_slots -= 1
             return True
         return False
     
