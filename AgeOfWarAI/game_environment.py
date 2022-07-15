@@ -228,7 +228,7 @@ class Env(object):
 
 
     def nothing(self):
-        pass
+        return True
 
 
     def get_inputs(self):

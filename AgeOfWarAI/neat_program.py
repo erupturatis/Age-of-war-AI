@@ -18,6 +18,7 @@ class NeatClass(object):
     inactive_envs = list()
     generation = 0
     master = None
+    valid_actions_streak = list()
 
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
@@ -76,7 +77,9 @@ class NeatClass(object):
         self.genomes_list = list()
         self.networks = list()
         self.inactive_envs = list()
+        self.valid_actions_streak = list()
         self.next_nn = 0
+
 
         for i in range(self.number_of_envs):
             env = self.envs[i]
@@ -99,12 +102,13 @@ class NeatClass(object):
         for i in range(self.number_of_envs):
             self.inactive_envs.append(0)
             self.inactive_envs[i] = 0
+            self.valid_actions_streak.append(0)
 
         interations = 0
         while evaluating:
 
             interations += 1
-            if interations % 10 == 0:
+            if interations % 50 == 0:
                 self.master.save_all_data_packets()
             # print(self.number_of_envs)
             # print(f"finished_envs {finished_envs}")
@@ -135,7 +139,7 @@ class NeatClass(object):
                     self.next_nn += 1
                     continue
 
-                self.genomes_list[self.networks_training[i]].fitness += 0.1 # reward because the game hasn't ended
+                self.genomes_list[self.networks_training[i]].fitness += 0.2 # reward because the game hasn't ended
 
                 net = self.networks[self.networks_training[i]]
                 #print(inputs)
@@ -146,7 +150,13 @@ class NeatClass(object):
                 Taken = env.take_action(action)
 
                 if Taken == True:
-                    self.genomes_list[self.networks_training[i]].fitness += 1
+                    self.valid_actions_streak[i] += 1
+                    if self.valid_actions_streak[i] > 4:
+                        self.valid_actions_streak[i] = 4
+                    self.genomes_list[self.networks_training[i]].fitness += 0.1 * self.valid_actions_streak[i]
+                    # bonus for taking a valid action
+                else:
+                    self.valid_actions_streak[i] = 0
 
                 env.defocus()
               
