@@ -43,6 +43,20 @@ class Master(object):
     def play_again(self, window_num):
         pass
     
+    def save_all_data_packets(self):
+        for window_num in range(len(self.envs)):
+            img = self.screenshots[window_num]
+            data = self.data[window_num]
+            if not os.path.exists(f"data_samples/sample{self.scans}"):
+                os.makedirs(f"data_samples/sample{self.scans}")
+
+            cv2.imwrite(f"data_samples/sample{self.scans}/image{window_num} {self.scans}.png", img)
+            with open(f'data_samples/sample{self.scans}/data{window_num} {self.scans}.txt', 'w') as f:
+                for elem in data:
+                    f.write(f"{elem}")
+                    f.write("\n")
+            f.close()
+
     def save_data_packets(self, window_num):
         img = self.screenshots[window_num]
         data = self.data[window_num]
@@ -156,9 +170,7 @@ class Master(object):
                 enemy_troops_total.append(arr1[3])
             else:
                 enemy_troops_total.append(0)
-        print("battle place")
-        print(max_player)
-        print(max_enemy)
+
         battle_place = min(max_player, 1-max_enemy)
       
 
@@ -221,18 +233,19 @@ class Master(object):
         inputs = (in_train, player_health, enemy_health, money,xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
-        if self.scans % 10 == 0:
-            self.save_data_packets(window_num)
+        # if self.scans % 25 == 0:
+        #     self.save_data_packets(window_num)
         self.scans += 1
         return inputs, False
         
     
 
 if __name__ == "__main__":
-    number_of_windows = 1
+    number_of_windows = 2
     difficulty = 3
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
+    neats.master = master
     neats.main()
 
 

@@ -222,8 +222,8 @@ class GameVision(object):
         except:
             xp_2 = -9999
 
-        print(f"money {money_1}  {money_2}")
-        print(f"xp {xp_1}  {xp_2} \n")
+        # print(f"money {money_1}  {money_2}")
+        # print(f"xp {xp_1}  {xp_2} \n")
         
         if money_2 < money_1:
             money_2 = money_1 # you never get values bigger than the actual value

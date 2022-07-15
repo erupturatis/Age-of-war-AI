@@ -2,6 +2,7 @@ import neat
 import time
 import numpy as np
 import os
+import pickle
 
 
 class NeatClass(object):
@@ -13,9 +14,10 @@ class NeatClass(object):
     networks_number = 0
     genomes_list = list()
     networks = list()
-    POP_SIZE = 2
+    POP_SIZE = None
     inactive_envs = list()
     generation = 0
+    master = None
 
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
@@ -68,10 +70,13 @@ class NeatClass(object):
     
 
     def eval_genomes(self, genomes, config):
-        print(f"STARTING GENERATION {self.generation}")
+        self.POP_SIZE = len(genomes)
+
         evaluating = True
         self.genomes_list = list()
         self.networks = list()
+        self.inactive_envs = list()
+
         for i in range(self.number_of_envs):
             env = self.envs[i]
             env.focus()
@@ -83,15 +88,25 @@ class NeatClass(object):
         for g in genomes:
             genome = g[1]
             net = neat.nn.FeedForwardNetwork.create(genome, config)
-            self.networks.append(net)
-            self.inactive_envs.append(0)
+            self.networks.append(net) 
             genome.fitness = 0
             self.genomes_list.append(genome)
         
+
         for i in range(self.number_of_envs):
+            self.inactive_envs.append(0)
             self.inactive_envs[i] = 0
 
+        interations = 0
         while evaluating:
+
+            interations += 1
+            if interations % 10 == 0:
+                self.master.save_all_data_packets()
+            print(self.number_of_envs)
+            print(f"finished_envs {finished_envs}")
+            print(f"inactive_envs {self.inactive_envs}")
+            print(f"next neural network {self.next_nn}")
             for i in range(self.number_of_envs):
                 if self.inactive_envs[i] == 1:
                     continue
@@ -122,14 +137,14 @@ class NeatClass(object):
                 #print(action)
                 action = np.argmax(action)
                 Taken = env.take_action(action)
+
                 if Taken == True:
                     self.genomes_list[self.networks_training[i]].fitness += 1
 
                 env.defocus()
               
-            # print(f"time taken for 1action {time.time()-time1}")
-            # time.sleep(0.5)
-        print("finished generations")
+          
+       
         self.generation += 1
 
 
@@ -163,8 +178,11 @@ class NeatClass(object):
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(1,60))
+        p.add_reporter(neat.Checkpointer(2,1800))
 
-        winner = p.run(self.eval_genomes, 5)
+        winner = p.run(self.eval_genomes, 10)
+        with open('winner-feedforward', 'wb') as f:
+            pickle.dump(winner, f)
 
         print('\n Best genome:\n{!s}'.format(winner))
+        print(stats)
