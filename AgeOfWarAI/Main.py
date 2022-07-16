@@ -108,12 +108,12 @@ class Master(object):
         
         env = self.envs[window_num]
         
-        
-        
         ability = env.check_ability_avalability()
         
         max_player = 1
         max_enemy = 0
+        enemy_troops_total = [0,0,0,0]
+        player_troops_total = [0,0,0,0]
         if env.player_aged_recently > 0:
             # also checks for troops from previous age
             env.player_aged_recently -= 1 
@@ -146,19 +146,22 @@ class Master(object):
         
         if env.enemy_aged_recently > 0:
             env.enemy_aged_recently -= 1
+         
             arr1,arr2 = gm.scan_troops(True, env.enemy_age, True)
             if gm.maximum != -0:
                 max_enemy = gm.maximum / gm.width
                 gm.maximum = 0
 
-            enemy_troops_total = list()
-            for i in range(3):
-                enemy_troops_total.append(arr1[i] + arr2[i])
+                enemy_troops_total = list()
+                for i in range(3):
+                    enemy_troops_total.append(arr1[i] + arr2[i])
 
-            if env.age == 5:
-                enemy_troops_total.append(arr2[3])
-            else:
-                enemy_troops_total.append(0)
+                if env.age == 5:
+                    enemy_troops_total.append(arr2[3])
+                else:
+                    enemy_troops_total.append(0)
+          
+            
         else:
             arr1 = gm.scan_troops(True, env.enemy_age, False)
             if gm.maximum != -0:
@@ -227,7 +230,7 @@ class Master(object):
         # print(xp)
         xp = xp / GLOBAL_VALUES["experience"][env.age-1]
         # print(xp)
-        print(GLOBAL_VALUES["experience"][env.age-1])
+        # print(GLOBAL_VALUES["experience"][env.age-1])
         if ability == True:
             ability = 1
         else:
@@ -235,11 +238,17 @@ class Master(object):
         new_turrets = list()
         for turret in turrets:
             tier,turr_age = turret[0], turret[1]
-            new_turrets.append(1) # turret exists
-            if turr_age == env.age:
-                new_turrets.append(1)
+            
+            if turr_age != 0:
+                new_turrets.append(1) # turret exists
+                if turr_age == env.age:
+                    new_turrets.append(1)
+                else:
+                    new_turrets.append(-1)
             else:
-                new_turrets.append(-1)
+                new_turrets.append(0)
+                new_turrets.append(0)
+
         
        
         

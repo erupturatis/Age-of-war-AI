@@ -139,7 +139,14 @@ class GameVision(object):
         result = self.get_position(img=img, template=template, treshold=0.95)
    
         if len(result) == 0:
+            # ended = self.check_if_ended()
+            # if ended == False:
+            #     vic = self.check_victory()
+            #     if vic == True:
+            # if ended == False:
             raise("Game Paused")    
+            # else:
+            #     return ended
                 
             
         result = result[0]
@@ -242,6 +249,9 @@ class GameVision(object):
         if xp_1 < xp_finale*8:            
             if xp_1 > xp_finale:
                 xp_finale = xp_1
+
+        if xp_finale < 1000 and xp_1 < 1000:
+            xp_finale = xp_1
 
         if money_finale == -9999: money_finale = self.env.money
         if xp_finale == -9999: xp_finale = self.env.xp

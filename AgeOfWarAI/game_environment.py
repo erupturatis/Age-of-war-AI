@@ -36,6 +36,7 @@ class Env(object):
         "buy_turret_slot",
         "turret_tier1","turret_tier2","turret_tier3",
         "sell_turret1","sell_turret2","sell_turret3","sell_turret4",
+        "ability",
         "evolve",
         "wait",
     ]
@@ -168,7 +169,7 @@ class Env(object):
         if self.slots[number] == 1:
             self.sell_turret_activate()
             pos = self.MOUSE_VALUES[f'turret_spot{number}']
-            print(f"selling turret on slot {number}")
+            # print(f"selling turret on slot {number}")
             pg.moveTo(*pos)
             pg.click()
             self.turrets[number] = [0,0]
@@ -197,7 +198,11 @@ class Env(object):
         self.total_slots = 1
         self.slots = [0,None,None,None]
         self.xp = 0
-        
+        self.enemy_aged_recently = 0
+        self.player_aged_recently = 0
+        self.enemy_age = 1
+        self.age = 1
+
         self.turrets = [
             [0,0],
             [0,0],
@@ -207,7 +212,7 @@ class Env(object):
 
     def take_action(self, action):
         action = self.ACTIONS[action]
-        print(f"trying to do action {action}")
+        #print(f"trying to do action {action}")
         ACTIONS_DICT = {
             "troop_tier1":self.spawn_troop1, 
             "troop_tier2":self.spawn_troop2, 
@@ -222,6 +227,7 @@ class Env(object):
             "sell_turret3":self.sell_turret3,
             "sell_turret4":self.sell_turret4,
             "evolve":self.upgrade_age,
+            "ability":self.use_ability,
             "wait":self.nothing,
         }
         #print(f"{self.assigned_window} with action {action}")

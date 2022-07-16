@@ -4,6 +4,7 @@ import numpy as np
 import os
 import pickle
 from random import choices
+from scipy.stats import stats
 
 class NeatClass(object):
     envs = None
@@ -19,6 +20,7 @@ class NeatClass(object):
     generation = 0
     master = None
     valid_actions_streak = list()
+    generations_fitnesses = list()
 
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
@@ -84,6 +86,7 @@ class NeatClass(object):
         self.inactive_envs = list()
         self.valid_actions_streak = list()
         self.next_nn = 0
+        fitness = 0
 
         time1 = time.time()
         for i in range(self.number_of_envs):
@@ -114,7 +117,7 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 10 == 0:
+            if interations % 50 == 0:
                 self.master.save_all_data_packets()
             # print(self.number_of_envs)
             # print(f"finished_envs {finished_envs}")
@@ -145,6 +148,7 @@ class NeatClass(object):
                         print("AI WON")
                         self.genomes_list[self.networks_training[i]].fitness += 10000
 
+                    #print(f"FITNESS: {self.genomes_list[self.networks_training[i]].fitness}")
                     env.restart_game()
                     self.networks_training[i] = self.next_nn
                     self.next_nn += 1
@@ -154,16 +158,20 @@ class NeatClass(object):
                 self.genomes_list[self.networks_training[i]].fitness += 0.2 # reward because the game hasn't ended
 
                 net = self.networks[self.networks_training[i]]
+
                 #print(inputs)
                 #print(len(inputs))
                 action = net.activate(inputs)
-                #print(action)
-                # print(f"INPUTS  {inputs}")
-                print(f"ACTIONS BEFORE SOFTMAX {action}")
                 action = np.array(action)
+                self.master.data[env.assigned_window].append(action)
+
+                #print(f"actions before Zscore {action}")
+                action = stats.zscore(action)
+                #print(f"actions after Zscore {action}")
                 action = self.softmax(action)
+
                 #print(f"ACTIONS AFTER SOFTMAX {action}")
-                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
                 action = choices(population, action)
                 
                 
@@ -181,7 +189,11 @@ class NeatClass(object):
 
 
                 env.defocus()
-              
+
+        for g in genomes:
+            genome = g[1]
+            fitness += genome.fitness
+
           
        
         self.generation += 1
@@ -217,14 +229,21 @@ class NeatClass(object):
        
         # Add a stdout reporter to show progress in the terminal.
         p.add_reporter(neat.StdOutReporter(True))
+ 
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(1,1800))
+        p.add_reporter(neat.Checkpointer(1))
+
         time1 = time.time()
-        winner = p.run(self.eval_genomes, 10)
+        #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-1")
+        winner = p.run(self.eval_genomes, 40)
         time2 = time.time()
+
         with open('winner-feedforward', 'wb') as f:
             pickle.dump(winner, f)
+        
+        with open('stats-feedforward', 'wb') as f:
+            pickle.dump(stats, f)
 
         print('\n Best genome:\n{!s}'.format(winner))
         print(stats)

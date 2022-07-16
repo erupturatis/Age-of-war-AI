@@ -16,14 +16,11 @@ number of available cannon slots (1 input)
 player age - one hot encoded (5 inputs)
 enemy age - one hot encoded (5 inputs)
 array with turrets and turrets age (max 4) (1 input for type since they get progressively 
-stronger and 1 input for cannon age)(2 for each slot)  (8 inputs) 
+stronger and 1 input for the age deprecation)(2 for each slot)  (8 inputs) 
 where is the current battle taking place(0-1 your base to enemy base) (1 input)
 
 
 8 + 1 + 1 + 1 + 4 + 4 + 1 + 1 + 5 + 5 + 1 + 1 + 1 + 1 = 34 inputs
-
-Maybe add other inputs?
-Enemy age one hot encoded
 
 outputs:
 
@@ -33,9 +30,10 @@ buy cannon slot (1 action)
 buy cannon tier 1,2,3, first available slot (3 actions)
 sell cannon on certain slot (4 actions)
 evolve next age (1 action)
+use ability(1 action)
 wait(1 actions)
 
-14 actions
+15 actions
 
 Dependencies
 
