@@ -96,7 +96,8 @@ class Master(object):
         ended = gm.check_if_ended()
         # print(ended)
         if ended:
-            return None, True
+            victory = gm.check_victory()
+            return victory, True
         money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
 
         in_train = gm.scan_training()
@@ -188,6 +189,9 @@ class Master(object):
             env.enemy_aged_recently = 5
 
         enemy_age = [0,0,0,0,0]
+        if enemy_age_index == None:
+            enemy_age_index = env.age
+            
         enemy_age[enemy_age_index-1] = 1
 
         #self.wm.defocus_window(window_num)
@@ -211,13 +215,19 @@ class Master(object):
             ["turrets", turrets],
         ]
         # normalizing money value to age
-        tier1_cost = GLOBAL_VALUES["troops"][env.age]["tier1"]
+        tier1_cost = GLOBAL_VALUES["troops"][env.age]["tier3"]
         
         env.money = money
         env.xp = xp
-
+        # print(money)
         money = money / tier1_cost
+        # print(money)
+        # print(tier1_cost)
+        # print("EXPERIENCE")
+        # print(xp)
         xp = xp / GLOBAL_VALUES["experience"][env.age-1]
+        # print(xp)
+        print(GLOBAL_VALUES["experience"][env.age-1])
         if ability == True:
             ability = 1
         else:
@@ -225,12 +235,15 @@ class Master(object):
         new_turrets = list()
         for turret in turrets:
             tier,turr_age = turret[0], turret[1]
-            new_turrets.append(tier)
-            new_turrets.append(turr_age)
+            new_turrets.append(1) # turret exists
+            if turr_age == env.age:
+                new_turrets.append(1)
+            else:
+                new_turrets.append(-1)
         
        
         
-        inputs = (in_train, player_health, enemy_health, money,xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
+        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
         # if self.scans % 25 == 0:

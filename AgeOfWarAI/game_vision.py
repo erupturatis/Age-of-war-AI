@@ -108,6 +108,15 @@ class GameVision(object):
         if len(result) > 0:
             return True
         return False
+    
+    def check_victory(self):
+        img = self.screenshot
+        template = cv2.imread(f'AgeOfWarAI/assets/misc/victory.png')
+        result = self.get_position(img=img, template=template, treshold=0.9)
+
+        if len(result) > 0:
+            return True
+        return False
 
 
     def scan_money_and_xp(self, env = None):
@@ -230,8 +239,9 @@ class GameVision(object):
 
         money_finale = money_2
         # money1 is consistently more accurate
-        if xp_1 > xp_finale:
-            xp_finale = xp_1
+        if xp_1 < xp_finale*8:            
+            if xp_1 > xp_finale:
+                xp_finale = xp_1
 
         if money_finale == -9999: money_finale = self.env.money
         if xp_finale == -9999: xp_finale = self.env.xp
@@ -582,20 +592,20 @@ class GameVision(object):
             img = cv2.flip(img,1)
         
         img = img[:,:-1600]
-        result = self.get_position(img, template1, 0.8)
+        result = self.get_position(img, template1, 0.75)
         #self.visualize_locations(img , result)
         if len(result)>=1:
             return 1
-        result = self.get_position(img, template2, 0.8)
+        result = self.get_position(img, template2, 0.75)
         if len(result)>=1:
             return 2
-        result = self.get_position(img, template3, 0.8)
+        result = self.get_position(img, template3, 0.75)
         if len(result)>=1:
             return 3
-        result = self.get_position(img, template4, 0.8)
+        result = self.get_position(img, template4, 0.75)
         if len(result)>=1:
             return 4
-        result = self.get_position(img, template5, 0.8)
+        result = self.get_position(img, template5, 0.75)
         if len(result)>=1:
             return 5
 

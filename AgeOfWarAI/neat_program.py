@@ -3,7 +3,7 @@ import time
 import numpy as np
 import os
 import pickle
-
+from random import choices
 
 class NeatClass(object):
     envs = None
@@ -23,6 +23,11 @@ class NeatClass(object):
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
         self.envs = envs
+
+    def softmax(self, x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum()
 
     def random_actions(self):
         for i in range(100):
@@ -80,7 +85,7 @@ class NeatClass(object):
         self.valid_actions_streak = list()
         self.next_nn = 0
 
-
+        time1 = time.time()
         for i in range(self.number_of_envs):
             env = self.envs[i]
             env.focus()
@@ -108,7 +113,8 @@ class NeatClass(object):
         while evaluating:
 
             interations += 1
-            if interations % 50 == 0:
+
+            if interations % 10 == 0:
                 self.master.save_all_data_packets()
             # print(self.number_of_envs)
             # print(f"finished_envs {finished_envs}")
@@ -118,6 +124,7 @@ class NeatClass(object):
 
             for i in range(self.number_of_envs):
                 if self.inactive_envs[i] == 1:
+                    time.sleep(0.25)
                     continue
                 env = self.envs[i]
   
@@ -134,9 +141,14 @@ class NeatClass(object):
                             evaluating = False
                         continue
 
+                    if inputs == True:
+                        print("AI WON")
+                        self.genomes_list[self.networks_training[i]].fitness += 10000
+
                     env.restart_game()
                     self.networks_training[i] = self.next_nn
                     self.next_nn += 1
+                    env.defocus()
                     continue
 
                 self.genomes_list[self.networks_training[i]].fitness += 0.2 # reward because the game hasn't ended
@@ -146,23 +158,35 @@ class NeatClass(object):
                 #print(len(inputs))
                 action = net.activate(inputs)
                 #print(action)
-                action = np.argmax(action)
-                Taken = env.take_action(action)
-
+                # print(f"INPUTS  {inputs}")
+                print(f"ACTIONS BEFORE SOFTMAX {action}")
+                action = np.array(action)
+                action = self.softmax(action)
+                #print(f"ACTIONS AFTER SOFTMAX {action}")
+                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+                action = choices(population, action)
+                
+                
+                Taken = env.take_action(*action)
+                # print(Taken)
+                # print("--------------------------")
                 if Taken == True:
                     self.valid_actions_streak[i] += 1
                     if self.valid_actions_streak[i] > 4:
                         self.valid_actions_streak[i] = 4
-                    self.genomes_list[self.networks_training[i]].fitness += 0.1 * self.valid_actions_streak[i]
+                    self.genomes_list[self.networks_training[i]].fitness += 0.05 * self.valid_actions_streak[i]
                     # bonus for taking a valid action
                 else:
                     self.valid_actions_streak[i] = 0
+
 
                 env.defocus()
               
           
        
         self.generation += 1
+        time2 = time.time()
+        print(f"time taken per gen {time2-time1}")
 
 
     def main(self):
@@ -195,11 +219,13 @@ class NeatClass(object):
         p.add_reporter(neat.StdOutReporter(True))
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
-        p.add_reporter(neat.Checkpointer(2,1800))
-
+        p.add_reporter(neat.Checkpointer(1,1800))
+        time1 = time.time()
         winner = p.run(self.eval_genomes, 10)
+        time2 = time.time()
         with open('winner-feedforward', 'wb') as f:
             pickle.dump(winner, f)
 
         print('\n Best genome:\n{!s}'.format(winner))
         print(stats)
+        print(f"everthing took about {time2-time1}")

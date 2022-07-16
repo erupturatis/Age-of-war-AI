@@ -70,11 +70,12 @@ class Env(object):
 
         if self.money >= self.TROOPS_COST[self.age][f'tier{tier}']:
             self.access_troops()
-            print("troops accesed")
+           # print("troops accesed")
+            self.money -= self.TROOPS_COST[self.age][f'tier{tier}']
             pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
             pg.click()
-            print("clicked")
+            #print("clicked")
             self.go_back()
             return True
         return False
@@ -195,6 +196,8 @@ class Env(object):
         self.available_slots = 1
         self.total_slots = 1
         self.slots = [0,None,None,None]
+        self.xp = 0
+        
         self.turrets = [
             [0,0],
             [0,0],
