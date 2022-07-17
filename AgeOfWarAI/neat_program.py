@@ -21,6 +21,7 @@ class NeatClass(object):
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
+    act = 0
 
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
@@ -171,9 +172,10 @@ class NeatClass(object):
                 action = self.softmax(action)
 
                 #print(f"ACTIONS AFTER SOFTMAX {action}")
-                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
                 action = choices(population, action)
-                
+                action = [12]
+                self.act += 1
                 
                 Taken = env.take_action(*action)
                 # print(Taken)
@@ -236,7 +238,7 @@ class NeatClass(object):
 
         time1 = time.time()
         #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-1")
-        winner = p.run(self.eval_genomes, 40)
+        winner = p.run(self.eval_genomes, 50)
         time2 = time.time()
 
         with open('winner-feedforward', 'wb') as f:

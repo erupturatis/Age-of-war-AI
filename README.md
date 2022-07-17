@@ -32,7 +32,7 @@ sell cannon on certain slot (4 actions)
 evolve next age (1 action)
 use ability(1 action)
 wait(1 actions)
-
+# if this doesn't work, reduce the cannon selling actions to 1 and buying cannon to 1
 15 actions
 
 Dependencies
@@ -40,6 +40,7 @@ Dependencies
 numpy
 pytesseract
 open-cv
+scipy 
 neat-python
 
 The assets work only for the that specific resolution
@@ -49,7 +50,7 @@ If you want to modify the game resoltion you will have to change the assets size
 You can download the archive I used for the game from here:
 
 Reward
-+1 for valid actions (including wait)
++0.1 for valid actions (including wait)
 +0.2 for each iteration it's still alive
-+1000 for winning
++10000 for winning
 

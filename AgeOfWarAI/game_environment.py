@@ -36,7 +36,7 @@ class Env(object):
         "buy_turret_slot",
         "turret_tier1","turret_tier2","turret_tier3",
         "sell_turret1","sell_turret2","sell_turret3","sell_turret4",
-        "ability",
+        #"ability",
         "evolve",
         "wait",
     ]
@@ -53,8 +53,9 @@ class Env(object):
         pg.click()
 
     def upgrade_age(self):
-        if self.xp >= GLOBAL_VALUES["experience"][self.age]:
-            pos = self.MOUSE_VALUES['special']
+        cost = GLOBAL_VALUES["experience"][self.age]
+        if self.xp >= cost:
+            pos = self.MOUSE_VALUES['evolve']
             pg.moveTo(*pos)
             pg.click()
             self.player_aged_recently = 5
@@ -227,7 +228,7 @@ class Env(object):
             "sell_turret3":self.sell_turret3,
             "sell_turret4":self.sell_turret4,
             "evolve":self.upgrade_age,
-            "ability":self.use_ability,
+            #"ability":self.use_ability,
             "wait":self.nothing,
         }
         #print(f"{self.assigned_window} with action {action}")
