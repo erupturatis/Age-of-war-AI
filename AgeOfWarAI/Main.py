@@ -264,7 +264,7 @@ class Master(object):
 
 if __name__ == "__main__":
     number_of_windows = 2
-    difficulty = 2
+    difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
     neats.master = master
