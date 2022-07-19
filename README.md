@@ -30,10 +30,11 @@ buy cannon slot (1 action)
 buy cannon tier 1,2,3, first available slot (3 actions)
 sell cannon on certain slot (4 actions)
 evolve next age (1 action)
-use ability(1 action)
+
 wait(1 actions)
 # if this doesn't work, reduce the cannon selling actions to 1 and buying cannon to 1
-15 actions
+14 actions
+use ability(1 action)
 
 Dependencies
 

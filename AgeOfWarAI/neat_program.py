@@ -22,6 +22,7 @@ class NeatClass(object):
     valid_actions_streak = list()
     generations_fitnesses = list()
     act = 0
+    fitness_med = list()
 
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
@@ -174,7 +175,7 @@ class NeatClass(object):
                 #print(f"ACTIONS AFTER SOFTMAX {action}")
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
                 action = choices(population, action)
-                action = [12]
+                #action = [12]
                 self.act += 1
                 
                 Taken = env.take_action(*action)
@@ -195,10 +196,19 @@ class NeatClass(object):
         for g in genomes:
             genome = g[1]
             fitness += genome.fitness
+        
+            self.fitness_med.append((self.generation, fitness))
+        
 
-          
        
         self.generation += 1
+        try:
+            with open('fitness_scores.txt', 'w') as f:
+                f.write(f"{self.fitness_med}")
+            f.close()
+        except:
+            pass
+
         time2 = time.time()
         print(f"time taken per gen {time2-time1}")
 
