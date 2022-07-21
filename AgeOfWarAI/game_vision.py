@@ -7,6 +7,7 @@ from pytesseract import Output
 from utils import *
 import warnings
 from game_environment import Env
+from GLOBALS import GLOBAL_VALUES
 import time
 
 class GameVision(object):
@@ -83,6 +84,7 @@ class GameVision(object):
         #img = cv2.imread("AgeOfWarAI/assets/game2.png")
         pytesseract.tesseract_cmd = "C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
         image_data = pytesseract.image_to_string(img, output_type=Output.DICT)
+    
         return image_data
 
 
@@ -158,7 +160,7 @@ class GameVision(object):
 
         img_money = img[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
         img_money_gray = cv2.cvtColor(img_money, cv2.COLOR_BGR2GRAY)
-        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*3,img_money_gray.shape[0]*2) )
+        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*5,img_money_gray.shape[0]*3) )
        
 
         
@@ -240,13 +242,19 @@ class GameVision(object):
 
         # print(f"money {money_1}  {money_2}")
         # print(f"xp {xp_1}  {xp_2} \n")
-        
-        if money_2 < money_1:
-            money_2 = money_1 # you never get values bigger than the actual value
+        # print(GLOBAL_VALUES["troops"][self.env.age]["tier3"])
+        # print(self.env.money)
+        # print(f"{money_2} === {money_1}")
+        if money_1 == money_2:
+            money_finale = money_2
+        else:
+            if money_finale < GLOBAL_VALUES["troops"][self.env.age]["tier3"]:
+                money_finale = money_2
+            elif money_2 < money_finale * 8:
+                money_finale = money_2
 
-        money_finale = money_2
         # money1 is consistently more accurate
-        if xp_1 < xp_finale*8:            
+        if xp_1 < xp_finale*2:            
             if xp_1 > xp_finale:
                 xp_finale = xp_1
 
@@ -269,6 +277,8 @@ class GameVision(object):
         # pil_image = Image.fromarray(color_coverted)
         # pil_image.show()
     
+    def click_game(self):
+        pyautogui.click(700,300)
 
     def initial_scan_health(self):
         self.player_health_position = (700, 279)

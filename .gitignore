@@ -7,6 +7,7 @@ __pycache__/
 *.so
 data_samples
 # Distribution / packaging
+fitness_scores*
 .Python
 build/
 develop-eggs/
@@ -73,7 +74,7 @@ docs/_build/
 
 # PyBuilder
 target/
-
+neat-checkpoint*
 # Jupyter Notebook
 .ipynb_checkpoints
 

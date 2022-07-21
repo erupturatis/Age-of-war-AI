@@ -16,6 +16,7 @@ class Env(object):
     available_slots = 1
     total_slots = 1
     slots = [0,None,None,None]
+    prev_money = -1
 
     turrets = [
         [0,0],
@@ -52,8 +53,23 @@ class Env(object):
         pg.moveTo(*pos)
         pg.click()
 
+    def revert_turret_buying(self):
+        if self.prev_money != -1:
+            if self.money > self.prev_money * 1.5:
+                print("reverted turret buying once")
+                self.slots[self.total_slots-1] = None
+                self.turrets[self.total_slots-1] = [0,0]
+                self.available_slots -= 1
+                self.total_slots -= 1
+
+            if self.money != self.prev_money:
+                self.prev_money = -1
+        
+
     def upgrade_age(self):
-        cost = GLOBAL_VALUES["experience"][self.age]
+        cost = GLOBAL_VALUES["experience"][self.age-1]
+        if(cost == None):
+            return False
         if self.xp >= cost:
             pos = self.MOUSE_VALUES['evolve']
             pg.moveTo(*pos)
@@ -103,8 +119,10 @@ class Env(object):
 
     def spawn_turret(self, tier):
 
-        if self.money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots>0:
+        if self.money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots > 0:
+            #print(self.available_slots)
             self.access_turret()
+            self.money -= self.TURRETS_COST[self.age][f'tier{tier}']
             pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
             pg.click()
@@ -118,8 +136,10 @@ class Env(object):
             pg.moveTo(*pos)
             pg.click()
 
-            self.slots[i] = 1
-            self.turrets[i] = [tier, self.age]
+            self.slots[slot] = 1
+            
+      
+            self.turrets[slot] = [tier, self.age]
             self.available_slots -= 1
             return True
         return False
@@ -150,14 +170,18 @@ class Env(object):
         return False
 
     def add_turret_slot(self):
-        if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots]:
-            self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots]
+        if GLOBAL_VALUES["turret_slots"][self.total_slots-1] == None:
+            return False
+        if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots-1] * 1.25:
+            #print(f"money buying {self.money}")
+            #self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]
+            self.prev_money = self.money
             pos = self.MOUSE_VALUES['buy_spot']
             pg.moveTo(*pos)
             pg.click()
             self.available_slots += 1
             self.total_slots += 1
-            self.slots [self.total_slots] = 0
+            self.slots [self.total_slots-1] = 0
             return True
         return False
 
@@ -194,7 +218,7 @@ class Env(object):
     def reset_everything(self):
         self.age = 1
         self.ability_used = None
-        self.money = 0
+        self.money = 175
         self.available_slots = 1
         self.total_slots = 1
         self.slots = [0,None,None,None]
@@ -259,11 +283,11 @@ class Env(object):
         self.master.defocus(self.assigned_window)
 
     def start_game(self):
-        print("starting game")
+        #print("starting game")
         self.reset_everything()
         pg.moveTo(*GLOBAL_VALUES["play"])
         pg.click()
-        print("moved to play")
+        #print("moved to play")
         difficulty = self.difficulty
         pg.moveTo(*GLOBAL_VALUES[f"diff{difficulty}"])
         pg.click()

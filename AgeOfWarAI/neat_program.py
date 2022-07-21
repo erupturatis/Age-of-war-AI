@@ -6,6 +6,8 @@ import pickle
 from random import choices
 from scipy.stats import stats
 
+
+
 class NeatClass(object):
     envs = None
     number_of_envs = None
@@ -17,12 +19,13 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 0
+    generation = 8
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
     act = 0
     fitness_med = list()
+ 
 
     def __init__(self, envs) -> None:
         self.number_of_envs = len(envs)
@@ -141,7 +144,7 @@ class NeatClass(object):
                         finished_envs += 1
                         self.inactive_envs[i] = 1
                         env.defocus()
-                      
+                        print(finished_envs)
                         if finished_envs == self.number_of_envs:
                             evaluating = False
                         continue
@@ -192,25 +195,32 @@ class NeatClass(object):
 
 
                 env.defocus()
-
-        for g in genomes:
+        mx = 0
+        cnt = 0
+        for i,g in enumerate(genomes):
             genome = g[1]
             fitness += genome.fitness
+            if genome.fitness > mx:
+                mx = genome.fitness
+                cnt = i
         
-            self.fitness_med.append((self.generation, fitness))
-        
-
-       
-        self.generation += 1
+        self.fitness_med = (self.generation, fitness / len(genomes), mx)
         try:
-            with open('fitness_scores.txt', 'w') as f:
+            with open(f'winner-generation {self.generation}', 'wb') as f:
+                pickle.dump(genomes[cnt], f)
+        except:
+            pass
+        
+        try:
+            with open(f'fitness_scores{self.generation}.txt', 'w') as f:
                 f.write(f"{self.fitness_med}")
             f.close()
         except:
             pass
 
-        time2 = time.time()
-        print(f"time taken per gen {time2-time1}")
+        self.generation += 1
+
+
 
 
     def main(self):
@@ -238,7 +248,7 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
-       
+        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-8")
         # Add a stdout reporter to show progress in the terminal.
         p.add_reporter(neat.StdOutReporter(True))
  
@@ -247,7 +257,7 @@ class NeatClass(object):
         p.add_reporter(neat.Checkpointer(1))
 
         time1 = time.time()
-        #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-1")
+        #
         winner = p.run(self.eval_genomes, 50)
         time2 = time.time()
 
@@ -260,3 +270,4 @@ class NeatClass(object):
         print('\n Best genome:\n{!s}'.format(winner))
         print(stats)
         print(f"everthing took about {time2-time1}")
+

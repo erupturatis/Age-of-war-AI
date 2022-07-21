@@ -30,7 +30,7 @@ class Master(object):
             gm = GameVision()
             env = Env(self.wm, i, self)
             env.difficulty = difficulty
-
+            
             self.envs.append(env)
             self.gms.append(gm)
             self.screenshots.append(1)
@@ -89,17 +89,20 @@ class Master(object):
         screenshot = self.wm.screenshot()
         self.screenshots[window_num] = screenshot
         env = self.envs[window_num]
+        #print(f"{self.envs[window_num].money} in data")
         time1 = time.time()
         gm = self.gms[window_num] 
         gm.screenshot = self.screenshots[window_num]
-
+        gm.click_game()
         ended = gm.check_if_ended()
         # print(ended)
         if ended:
             victory = gm.check_victory()
             return victory, True
-        money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
 
+        
+        money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
+     
         in_train = gm.scan_training()
 
         gm.initial_scan_health()
@@ -182,6 +185,21 @@ class Master(object):
 
         turrets = env.turrets
 
+        new_turrets = list()
+        for turret in turrets:
+            tier,turr_age = turret[0], turret[1]
+            
+            if turr_age != 0:
+                new_turrets.append(tier) # turret exists
+                if turr_age == env.age:
+                    new_turrets.append(1)
+                else:
+                    new_turrets.append(-1)
+            else:
+                new_turrets.append(0)
+                new_turrets.append(0)
+
+
         age = [0,0,0,0,0]
         age[env.age-1] = 1
 
@@ -215,13 +233,14 @@ class Master(object):
             ["player age", age],
             ["enemy age",enemy_age],
             ["enemy age recently", env.enemy_aged_recently],
-            ["turrets", turrets],
+            ["turrets", new_turrets],
         ]
         # normalizing money value to age
         tier1_cost = GLOBAL_VALUES["troops"][env.age]["tier3"]
         
         env.money = money
         env.xp = xp
+        env.revert_turret_buying()
         # print(money)
         money = money / tier1_cost
         # print(money)
@@ -235,21 +254,6 @@ class Master(object):
             ability = 1
         else:
             ability = 0
-        new_turrets = list()
-        for turret in turrets:
-            tier,turr_age = turret[0], turret[1]
-            
-            if turr_age != 0:
-                new_turrets.append(1) # turret exists
-                if turr_age == env.age:
-                    new_turrets.append(1)
-                else:
-                    new_turrets.append(-1)
-            else:
-                new_turrets.append(0)
-                new_turrets.append(0)
-
-        
        
         
         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
@@ -261,7 +265,6 @@ class Master(object):
         return inputs, False
         
     
-
 if __name__ == "__main__":
     number_of_windows = 2
     difficulty = 1
