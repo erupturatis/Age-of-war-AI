@@ -4,10 +4,12 @@ __pycache__/
 *$py.class
 
 # C extensions
+
 *.so
 data_samples
 # Distribution / packaging
 fitness_scores*
+winner*
 .Python
 build/
 develop-eggs/
