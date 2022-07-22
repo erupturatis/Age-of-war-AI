@@ -258,7 +258,7 @@ class GameVision(object):
             if xp_1 > xp_finale:
                 xp_finale = xp_1
 
-        if xp_finale < 1000 and xp_1 < 1000:
+        if xp_finale < 1000:
             xp_finale = xp_1
 
         if money_finale == -9999: money_finale = self.env.money

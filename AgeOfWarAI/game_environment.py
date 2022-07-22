@@ -17,6 +17,7 @@ class Env(object):
     total_slots = 1
     slots = [0,None,None,None]
     prev_money = -1
+    printing = False
 
     turrets = [
         [0,0],
@@ -173,7 +174,7 @@ class Env(object):
         if GLOBAL_VALUES["turret_slots"][self.total_slots-1] == None:
             return False
         if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots-1] * 1.25:
-            #print(f"money buying {self.money}")
+            print(f"money buying slot {self.money}")
             #self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]
             self.prev_money = self.money
             pos = self.MOUSE_VALUES['buy_spot']
@@ -237,7 +238,8 @@ class Env(object):
 
     def take_action(self, action):
         action = self.ACTIONS[action]
-        #print(f"trying to do action {action}")
+        if self.printing:
+            print(f"trying to do action {action}")
         ACTIONS_DICT = {
             "troop_tier1":self.spawn_troop1, 
             "troop_tier2":self.spawn_troop2, 
