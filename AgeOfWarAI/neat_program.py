@@ -124,11 +124,6 @@ class NeatClass(object):
 
             if interations % 50 == 0:
                 self.master.save_all_data_packets()
-            # print(self.number_of_envs)
-            # print(f"finished_envs {finished_envs}")
-            # print(f"inactive_envs {self.inactive_envs}")
-            # print(f"next neural network {self.next_nn}")
-            # print(f"atributed networks {self.networks_training}")
 
             for i in range(self.number_of_envs):
                 if self.inactive_envs[i] == 1:
@@ -193,6 +188,7 @@ class NeatClass(object):
                 else:
                     self.valid_actions_streak[i] = 0
 
+                self.master.add_to_data_packet(i, self.generation)
 
                 env.defocus()
         mx = 0
@@ -233,6 +229,86 @@ class NeatClass(object):
         self.run(config_path)
 
         # self.random_actions()
+    
+    def run_winner(self, config_file, winner):
+
+        config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                            neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                            config_file)
+
+        with open(f"{winner}", "wb") as f:
+            genome = pickle.load(f)
+
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+
+        while evaluating:
+
+            interations += 1
+
+            if interations % 50 == 0:
+                self.master.save_all_data_packets()
+
+            env = self.envs[0]
+  
+            env.focus()
+            inputs, ended = env.get_inputs()
+      
+            if ended:
+                if self.next_nn >= self.POP_SIZE:
+                    finished_envs += 1
+                    self.inactive_envs[i] = 1
+                    env.defocus()
+                    print(finished_envs)
+                    if finished_envs == self.number_of_envs:
+                        evaluating = False
+                    continue
+
+                if inputs == True:
+                    print("AI WON")
+                    self.genomes_list[self.networks_training[i]].fitness += 10000
+
+                #print(f"FITNESS: {self.genomes_list[self.networks_training[i]].fitness}")
+                env.restart_game()
+                self.networks_training[i] = self.next_nn
+                self.next_nn += 1
+                env.defocus()
+                continue
+
+            self.genomes_list[self.networks_training[i]].fitness += 0.2 # reward because the game hasn't ended
+
+            net = self.networks[self.networks_training[i]]
+
+            #print(inputs)
+            #print(len(inputs))
+            action = net.activate(inputs)
+            action = np.array(action)
+            self.master.data[env.assigned_window].append(action)
+
+            #print(f"actions before Zscore {action}")
+            action = stats.zscore(action)
+            #print(f"actions after Zscore {action}")
+            action = self.softmax(action)
+
+            #print(f"ACTIONS AFTER SOFTMAX {action}")
+            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+            action = choices(population, action)
+            #action = [12]
+            self.act += 1
+            
+            Taken = env.take_action(*action)
+            # print(Taken)
+            # print("--------------------------")
+            if Taken == True:
+                self.valid_actions_streak[i] += 1
+                if self.valid_actions_streak[i] > 4:
+                    self.valid_actions_streak[i] = 4
+                self.genomes_list[self.networks_training[i]].fitness += 0.05 * self.valid_actions_streak[i]
+                # bonus for taking a valid action
+            else:
+                self.valid_actions_streak[i] = 0
+
+
+            env.defocus()
 
 
     def run(self, config_file):

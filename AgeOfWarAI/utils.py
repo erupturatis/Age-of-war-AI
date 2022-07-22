@@ -5,7 +5,7 @@ import numpy as np
 
 class WindowManagement(object):
     windows = None
-    def __init__(self, title = "Adobe Flash Player 13") -> None:
+    def __init__(self, title = "Adobe Flash Player 32") -> None:
         self.windows = pyautogui.getWindowsWithTitle(title)
 
     def focus_window(self, number=0):

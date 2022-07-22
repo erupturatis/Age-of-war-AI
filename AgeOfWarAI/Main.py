@@ -57,6 +57,11 @@ class Master(object):
                     f.write("\n")
             f.close()
 
+
+    def add_to_data_packet(self, window_num, data):
+        self.data[window_num].append(data)
+
+
     def save_data_packets(self, window_num):
         img = self.screenshots[window_num]
         data = self.data[window_num]
@@ -117,6 +122,8 @@ class Master(object):
         max_enemy = 0
         enemy_troops_total = [0,0,0,0]
         player_troops_total = [0,0,0,0]
+
+
         if env.player_aged_recently > 0:
             # also checks for troops from previous age
             env.player_aged_recently -= 1 
@@ -139,14 +146,15 @@ class Master(object):
                 max_player = gm.maximum / gm.width
                 gm.maximum = 0
 
-            
             player_troops_total = arr1
 
-            if env.age == 5:
-                player_troops_total.append(arr1[3])
-            else:
+            if env.age != 5:
                 player_troops_total.append(0)
+     
+                
         
+
+
         if env.enemy_aged_recently > 0:
             env.enemy_aged_recently -= 1
          
@@ -159,7 +167,7 @@ class Master(object):
                 for i in range(3):
                     enemy_troops_total.append(arr1[i] + arr2[i])
 
-                if env.age == 5:
+                if env.enemy_age == 5:
                     enemy_troops_total.append(arr2[3])
                 else:
                     enemy_troops_total.append(0)
@@ -173,10 +181,10 @@ class Master(object):
 
             enemy_troops_total = arr1
             
-            if env.age == 5:
-                enemy_troops_total.append(arr1[3])
-            else:
+            if env.enemy_age != 5:
                 enemy_troops_total.append(0)
+       
+                
 
         battle_place = min(max_player, 1-max_enemy)
       
@@ -247,7 +255,11 @@ class Master(object):
         # print(tier1_cost)
         # print("EXPERIENCE")
         # print(xp)
-        xp = xp / GLOBAL_VALUES["experience"][env.age-1]
+        divider =  GLOBAL_VALUES["experience"][env.age-1]
+        if divider == None:
+            xp = 0
+        else:
+            xp = xp / divider
         # print(xp)
         # print(GLOBAL_VALUES["experience"][env.age-1])
         if ability == True:

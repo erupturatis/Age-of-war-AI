@@ -1,5 +1,5 @@
 GLOBAL_VALUES = {
-    "experience":[4000,14000,45000,20000, None],
+    "experience":[4000,14000,45000,200000, None],
     "turret_slots":[1000,3000,7500,None],
     "restart":(1300,640),
     "play":(1300,450),
