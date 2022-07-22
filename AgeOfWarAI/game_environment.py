@@ -18,6 +18,7 @@ class Env(object):
     slots = [0,None,None,None]
     prev_money = -1
     printing = False
+    costly_action_taken = -1
 
     turrets = [
         [0,0],
@@ -88,6 +89,7 @@ class Env(object):
     def spawn_troop(self, tier):
 
         if self.money >= self.TROOPS_COST[self.age][f'tier{tier}']:
+            self.costly_action_taken = 1
             self.access_troops()
            # print("troops accesed")
             self.money -= self.TROOPS_COST[self.age][f'tier{tier}']
@@ -123,6 +125,7 @@ class Env(object):
         if self.money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots > 0:
             #print(self.available_slots)
             self.access_turret()
+            self.costly_action_taken = 1
             self.money -= self.TURRETS_COST[self.age][f'tier{tier}']
             pos = self.MOUSE_VALUES[f'tier{tier}']
             pg.moveTo(*pos)
@@ -175,6 +178,7 @@ class Env(object):
             return False
         if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots-1] * 1.25:
             print(f"money buying slot {self.money}")
+            self.costly_action_taken = 1
             #self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]
             self.prev_money = self.money
             pos = self.MOUSE_VALUES['buy_spot']

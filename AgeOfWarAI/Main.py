@@ -34,7 +34,7 @@ class Master(object):
             self.envs.append(env)
             self.gms.append(gm)
             self.screenshots.append(1)
-            self.data.append(None)
+            self.data.append(list())
 
 
     def start_game(self, window_num):
@@ -59,6 +59,7 @@ class Master(object):
 
 
     def add_to_data_packet(self, window_num, data):
+        print(data)
         self.data[window_num].append(data)
 
 
@@ -105,7 +106,10 @@ class Master(object):
             victory = gm.check_victory()
             return victory, True
 
-        
+
+        player_age_index = gm.scan_age(flip = False)
+        env.age = player_age_index
+
         money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
      
         in_train = gm.scan_training()
@@ -207,7 +211,7 @@ class Master(object):
                 new_turrets.append(0)
                 new_turrets.append(0)
 
-
+        
         age = [0,0,0,0,0]
         age[env.age-1] = 1
 

@@ -19,7 +19,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 8
+    generation = 0
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -225,8 +225,8 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward.txt')
 
         self.start_envs()
-        #self.run(config_path)
-        self.run_winner(config_path, "winner-generation 15")
+        self.run(config_path)
+        # self.run_winner(config_path, "winner-generation 15")
 
         # self.random_actions()
     
@@ -250,8 +250,8 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 10 == 0:
-                self.master.save_all_data_packets()
+            # if interations % 10 == 0:
+            #     self.master.save_all_data_packets()
 
             env = self.envs[0]
             env.focus()
@@ -292,6 +292,9 @@ class NeatClass(object):
             else:
                 valid_actions_streak = 0
 
+        
+            self.master.save_all_data_packets()
+
 
 
     def run(self, config_file):
@@ -307,7 +310,7 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
-        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-8")
+        # p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-15")
         # Add a stdout reporter to show progress in the terminal.
         p.add_reporter(neat.StdOutReporter(True))
  
@@ -317,7 +320,7 @@ class NeatClass(object):
 
         time1 = time.time()
         #
-        winner = p.run(self.eval_genomes, 50)
+        winner = p.run(self.eval_genomes, 40)
         time2 = time.time()
 
         with open('winner-feedforward', 'wb') as f:
