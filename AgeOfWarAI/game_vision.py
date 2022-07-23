@@ -240,38 +240,32 @@ class GameVision(object):
         except:
             xp_2 = -9999
 
-        # print(f"money {money_1}  {money_2}")
-        # print(f"xp {xp_1}  {xp_2} \n")
-        # print(GLOBAL_VALUES["troops"][self.env.age]["tier3"])
-        # print(self.env.money)
-        # print(f"{money_2} === {money_1}")
-      
+
 
         if money_1 == money_2:
-            #print("moneyt equaal")
+  
             money_finale = money_2
         else:
             if money_2 >= money_finale:
                 if money_finale < GLOBAL_VALUES["troops"][self.env.age]["tier3"]:
                     if money_finale > GLOBAL_VALUES["troops"][self.env.age]["tier1"]:
-                        #print("between tier 1 and 3")
+         
                         if money_2 < money_finale * 8:
                             money_finale = money_2
                     else:
-                        #print("under tier 3")
+                
                         money_finale = money_2
                 elif money_2 < money_finale * 6:
-                    #print("over tier 3")
                     money_finale = money_2
             else:
-                #print("smaller than finale")   
+          
                 if env.costly_action_taken == 1:
                     # the money has a reason to be lower
                     money_finale = money_2
                     env.costly_action_taken = -1
                     
         if money_finale < 100:
-            #print("under 100")
+     
             money_finale = money_2
 
         # money1 is consistently more accurate
@@ -279,8 +273,7 @@ class GameVision(object):
             if xp_1 > xp_finale:
                 xp_finale = xp_1
 
-        # print(money_1)
-        # print(money_2)
+      
         
 
         if xp_finale < 350:

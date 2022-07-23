@@ -59,7 +59,7 @@ class Master(object):
 
 
     def add_to_data_packet(self, window_num, data):
-        print(data)
+        
         self.data[window_num].append(data)
 
 
@@ -282,7 +282,7 @@ class Master(object):
         
     
 if __name__ == "__main__":
-    number_of_windows = 1
+    number_of_windows = 2
     difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
