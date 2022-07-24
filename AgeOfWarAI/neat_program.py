@@ -122,7 +122,7 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 50 == 0:
+            if interations % 25 == 0:
                 self.master.save_all_data_packets()
 
             for i in range(self.number_of_envs):
@@ -225,8 +225,8 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward.txt')
 
         self.start_envs()
-        self.run(config_path)
-        # self.run_winner(config_path, "winner-generation 15")
+        #self.run(config_path)
+        self.run_winner(config_path, "winner-generation 11")
 
         # self.random_actions()
     

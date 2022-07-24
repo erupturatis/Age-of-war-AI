@@ -177,10 +177,11 @@ class Env(object):
         if GLOBAL_VALUES["turret_slots"][self.total_slots-1] == None:
             return False
         if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots-1] * 1.25:
-            print(f"money buying slot {self.money}")
+            #print(f"money buying slot {self.money}")
             self.costly_action_taken = 1
             #self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]
             self.prev_money = self.money
+            self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]
             pos = self.MOUSE_VALUES['buy_spot']
             pg.moveTo(*pos)
             pg.click()

@@ -22,6 +22,7 @@ where is the current battle taking place(0-1 your base to enemy base) (1 input)
 
 8 + 1 + 1 + 1 + 4 + 4 + 1 + 1 + 5 + 5 + 1 + 1 + 1 + 1 = 34 inputs
 
+
 outputs:
 
 create troops tier 1,2,3 (3 actions)
@@ -32,6 +33,11 @@ sell cannon on certain slot (4 actions)
 evolve next age (1 action)
 
 wait(1 actions)
+
+simplifications
+-selling turret 1 action 4 -> 1
+-enemy troops, player troops -> taking them as 2 percents 8 -> 2
+
 # if this doesn't work, reduce the cannon selling actions to 1 and buying cannon to 1
 14 actions
 use ability(1 action)

@@ -6,6 +6,8 @@ from time import time
 from GLOBALS import GLOBAL_VALUES
 import time
 import os
+from paddleocr import PaddleOCR,draw_ocr
+import logging
 # about 0.25 seconds per screenshot
 # 4 windows would mean an action per second which should be enough
 
@@ -13,7 +15,7 @@ class Master(object):
 
     number_windows = 1
     wm = None
-
+    ocr = None
     gms = list()
     envs = list()
     screenshots = list()
@@ -25,7 +27,12 @@ class Master(object):
 
         self.number_windows = number_windows
         self.wm = WindowManagement()
+
+        ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False) # need to run only once to download and load model into memory
+        self.ocr = ocr
+
         
+
         for i in range(number_windows):
             gm = GameVision()
             env = Env(self.wm, i, self)
@@ -98,8 +105,10 @@ class Master(object):
         #print(f"{self.envs[window_num].money} in data")
         time1 = time.time()
         gm = self.gms[window_num] 
+        gm.ocr = self.ocr
         gm.screenshot = self.screenshots[window_num]
         gm.click_game()
+        pyautogui.moveTo(500,1300)
         ended = gm.check_if_ended()
         # print(ended)
         if ended:
@@ -108,7 +117,11 @@ class Master(object):
 
 
         player_age_index = gm.scan_age(flip = False)
-        env.age = player_age_index
+        Error = gm.scan_cancel()
+        if Error:
+            pyautogui.click(1675,100)
+        if player_age_index != None:
+            env.age = player_age_index
 
         money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
      
@@ -282,7 +295,7 @@ class Master(object):
         
     
 if __name__ == "__main__":
-    number_of_windows = 2
+    number_of_windows = 1
     difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)

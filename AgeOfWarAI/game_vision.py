@@ -10,8 +10,10 @@ from game_environment import Env
 from GLOBALS import GLOBAL_VALUES
 import time
 
+
 class GameVision(object):
 
+    ocr = None
     env = None
     screenshot = None
     player_health_position = None
@@ -132,89 +134,24 @@ class GameVision(object):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
         
         img = self.screenshot
-        img = img[:-700,600:-1400]
+        img = img[:-700,600:-1650]
+        ocr = self.ocr
 
-        # img = cv2.imread('0.png') # change
+        result = ocr.ocr(img, cls=True)
 
-        #cv2.imwrite("game0",img)
+        txts = [line[1][0] for line in result]
 
         result = self.get_position(img=img, template=template, treshold=0.95)
-   
         if len(result) == 0:
-            # ended = self.check_if_ended()
-            # if ended == False:
-            #     vic = self.check_victory()
-            #     if vic == True:
-            # if ended == False:
             raise("Game Paused")    
-            # else:
-            #     return ended
-                
+
             
         result = result[0]
-        
-      
 
-        top_left = result
-        bottom_right = (result[0] + 150, result[1] + 75)
-
-        img_money = img[top_left[1]:bottom_right[1], top_left[0]:bottom_right[0]]
-        img_money_gray = cv2.cvtColor(img_money, cv2.COLOR_BGR2GRAY)
-        img_money_gray = cv2.resize(img_money_gray, (img_money_gray.shape[1]*5,img_money_gray.shape[0]*3) )
-       
-
-        
-        result1 = self.analyzie_image(img_money_gray) # 0.25sec
-        
-        indices_aux = np.where((img_money_gray<70))
-        img_money_gray[indices_aux] = 182
-
-        indices_first = np.where(img_money_gray>200)
-        indices_second = np.where((img_money_gray>75)&(img_money_gray<120) )
-       
-        #time1 = time.time()
-        img_money_gray[:,:] = 255
-        
-        img_money_gray[indices_first] = 0
-        img_money_gray[indices_second] = 0
-
-        #time2 = time.time()
-        
-
-        result2 = self.analyzie_image(img_money_gray) # 0.25sec
   
-        result1 = result1['text']
-        result2 = result2['text']
-
-        money_1 = self.env.money
-        money_2 = self.env.money
-
-        xp_1 = self.env.xp
-        xp_2 = self.env.xp
-        # print("results1")
-        # print(result1)
-        # print("results2")
-        # print(result2)
-        
-
-        result1 = result1.replace("@","0")
-        result1 = result1.replace("©","0")
-
-        result2 = result2.replace("@","0")
-        result2 = result2.replace("©","0")
-
-
-        try:
-            money_1,xp_1 = result1.split()[1],result1.split()[3]
-        except:
-            money_1 = self.env.money
-            xp_1 = self.env.xp
-        
-        try:
-            money_2,xp_2 = result2.split()[1],result2.split()[3]
-        except:
-            money_2 = self.env.money
-            xp_2 = self.env.xp
+        money_1 = txts[0]
+        xp_1 = txts[1].split(' ')[1]
+   
 
         money_finale = self.env.money
         xp_finale = self.env.xp
@@ -225,78 +162,22 @@ class GameVision(object):
             money_1 = -9999
 
         try:
-            money_2 = int(money_2)
-        except:
-            money_2 = -9999
-
-        
-        try:
             xp_1 = int(xp_1)
         except:
             xp_1 = -9999
 
-        try:
-            xp_2 = int(xp_2)
-        except:
-            xp_2 = -9999
 
+        print(f"{money_1}  {xp_1}")
 
-
-        if money_1 == money_2:
-  
-            money_finale = money_2
-        else:
-            if money_2 >= money_finale:
-                if money_finale < GLOBAL_VALUES["troops"][self.env.age]["tier3"]:
-                    if money_finale > GLOBAL_VALUES["troops"][self.env.age]["tier1"]:
-         
-                        if money_2 < money_finale * 8:
-                            money_finale = money_2
-                    else:
-                
-                        money_finale = money_2
-                elif money_2 < money_finale * 6:
-                    money_finale = money_2
-            else:
-          
-                if env.costly_action_taken == 1:
-                    # the money has a reason to be lower
-                    money_finale = money_2
-                    env.costly_action_taken = -1
-                    
-        if money_finale < 100:
-     
-            money_finale = money_2
-
-        # money1 is consistently more accurate
-        if xp_1 < xp_finale*2:            
-            if xp_1 > xp_finale:
-                xp_finale = xp_1
-
-      
-        
-
-        if xp_finale < 350:
-            xp_finale = xp_1
-
-        if xp_1 == xp_2:
-            xp_finale = xp_1
+        money_finale = money_1
+        xp_finale = xp_1
 
         if money_finale == -9999: money_finale = self.env.money
         if xp_finale == -9999: xp_finale = self.env.xp
         
         
         return money_finale, xp_finale
-        
-        #since the scan is not perfect we match the results
 
-
-        
-        # color_coverted = cv2.cvtColor(opencv_image, cv2.COLOR_BGR2RGB)
-        # cv2.imshow("OpenCV Image", opencv_image)
-
-        # pil_image = Image.fromarray(color_coverted)
-        # pil_image.show()
     
     def click_game(self):
         pyautogui.click(700,300)
@@ -604,20 +485,29 @@ class GameVision(object):
 
         img = img[:-800,800:-800]
 
-
-
         result = cv2.matchTemplate(img, template, cv2.TM_SQDIFF_NORMED)
         locations = np.where(result <= .001)
         locations = list(zip(*locations[::-1]))
         locations = self.clustering_values(locations, 3, 1)
         locations = self.clustering_values(locations, 3, 0)
-        # print(locations)
-        # for loc in locations:
-        #     cv2.rectangle(img, loc, (loc[0]+10,loc[1]+10),(0,255,0),3)
-    
-        # cv2.imshow("img",img)
-        # cv2.waitKey()
+
         return len(locations)
+
+    def scan_cancel(self):
+        img = self.screenshot # change
+        #img = cv2.imread('AgeOfWarAI/assets/environment/test4.png')
+        template = cv2.imread('AgeOfWarAI/assets/misc/training.png')
+
+        img = img[:-700,1500:-700]
+        # cv2.imshow("fwea",img)
+        # cv2.waitKey()
+        result = cv2.matchTemplate(img, template, cv2.TM_SQDIFF_NORMED)
+        locations = np.where(result <= .001)
+        locations = list(zip(*locations[::-1]))
+        if len(locations) > 0:
+            return True
+        return False
+
     
     def scan_age(self, flip = False):
         img = self.screenshot
@@ -633,20 +523,20 @@ class GameVision(object):
             img = cv2.flip(img,1)
         
         img = img[:,:-1600]
-        result = self.get_position(img, template1, 0.75)
+        result = self.get_position(img, template1, 0.70)
         #self.visualize_locations(img , result)
         if len(result)>=1:
             return 1
-        result = self.get_position(img, template2, 0.75)
+        result = self.get_position(img, template2, 0.70)
         if len(result)>=1:
             return 2
-        result = self.get_position(img, template3, 0.75)
+        result = self.get_position(img, template3, 0.70)
         if len(result)>=1:
             return 3
-        result = self.get_position(img, template4, 0.75)
+        result = self.get_position(img, template4, 0.70)
         if len(result)>=1:
             return 4
-        result = self.get_position(img, template5, 0.75)
+        result = self.get_position(img, template5, 0.70)
         if len(result)>=1:
             return 5
 
@@ -657,7 +547,7 @@ if __name__ == "__main__":
     #obj1.screenshot()
 
     obj = GameVision()
-    print(obj.scan_age(True))
+    obj.scan_money_and_xp()
 
     pass
 
