@@ -29,7 +29,7 @@ class WindowManagement(object):
 
         if len(self.windows) == 0: return
         window = self.windows[number]
-        window.move(-window.left + 100,-window.top + 100)
+        window.move(-window.left - 300,-window.top + 1350)
 
     
 

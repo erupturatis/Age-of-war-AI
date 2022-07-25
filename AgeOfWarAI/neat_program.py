@@ -19,7 +19,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 9 
+    generation = 4
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -137,9 +137,10 @@ class NeatClass(object):
                 if ended:
                     if self.next_nn >= self.POP_SIZE:
                         finished_envs += 1
+                        
                         self.inactive_envs[i] = 1
                         env.defocus()
-                        print(finished_envs)
+                     
                         if finished_envs == self.number_of_envs:
                             evaluating = False
                         continue
@@ -152,6 +153,7 @@ class NeatClass(object):
                     env.restart_game()
                     self.networks_training[i] = self.next_nn
                     self.next_nn += 1
+                    print(f"got to {self.next_nn} network")
                     env.defocus()
                     continue
 
@@ -172,8 +174,18 @@ class NeatClass(object):
 
                 #print(f"ACTIONS AFTER SOFTMAX {action}")
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+
+                if env.xp > 10000000 :
+                    # the ai hit a infinite loop so it will lose on purpose
+                    # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
+                    action[8] += 10
+                    action[9] += 10
+                    action[10] += 10
+                    action[11] += 10
+                    action[13] += 10
+
                 action = choices(population, action)
-                #action = [12]
+                #print(env.xp)
                 self.act += 1
                 
                 Taken = env.take_action(*action)
@@ -219,16 +231,6 @@ class NeatClass(object):
 
 
 
-    def main(self):
-        
-        local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward.txt')
-
-        self.start_envs()
-        #self.run(config_path)
-        self.run_winner(config_path, "winner-generation 11")
-
-        # self.random_actions()
     
     def run_winner(self, config_file, winner):
 
@@ -247,7 +249,7 @@ class NeatClass(object):
         valid_actions_streak = 0
         interations = 0
         while evaluating:
-
+        
             interations += 1
 
             # if interations % 10 == 0:
@@ -279,6 +281,8 @@ class NeatClass(object):
 
             population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
             action = choices(population, action)
+            
+
             self.act += 1
             
             Taken = env.take_action(*action)
@@ -296,6 +300,16 @@ class NeatClass(object):
             self.master.save_all_data_packets()
 
 
+    def main(self):
+        
+        local_dir = os.path.dirname(__file__)
+        config_path = os.path.join(local_dir, 'config-feedforward.txt')
+
+        self.start_envs()
+        self.run(config_path)
+        #self.run_winner(config_path, "winner-generation 11")
+
+        # self.random_actions()
 
     def run(self, config_file):
         
@@ -310,8 +324,8 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
-        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-9")
-        # Add a stdout reporter to show progress in the terminal.
+        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-4")
+
         p.add_reporter(neat.StdOutReporter(True))
  
         stats = neat.StatisticsReporter()

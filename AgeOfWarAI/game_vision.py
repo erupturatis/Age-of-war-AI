@@ -134,47 +134,60 @@ class GameVision(object):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
         
         img = self.screenshot
-        img = img[:-700,600:-1650]
+        img = img[:-700,680:-1680]
+
+        result = self.get_position(img=img, template=template, treshold=0.95)
+        if len(result) == 0:
+            raise("Game Paused") 
+
+        img = cv2.resize(img, (img.shape[1]*4,img.shape[0]*4) )
         ocr = self.ocr
+       
 
         result = ocr.ocr(img, cls=True)
 
         txts = [line[1][0] for line in result]
 
-        result = self.get_position(img=img, template=template, treshold=0.95)
-        if len(result) == 0:
-            raise("Game Paused")    
+           
+        try:
+            result = result[0]
+            money_1 = txts[0]
 
+            cnt = 0
             
-        result = result[0]
 
-  
-        money_1 = txts[0]
-        xp_1 = txts[1].split(' ')[1]
-   
+            for i,c in enumerate(txts[1]):
+                if c<='9' and c >='0':
+                    cnt = i
+                    break
 
-        money_finale = self.env.money
-        xp_finale = self.env.xp
+            xp_1 = txts[1][cnt:]
 
-        try:
-            money_1 = int(money_1)
+
+            money_finale = self.env.money
+            xp_finale = self.env.xp
+
+            try:
+                money_1 = int(money_1)
+            except:
+                money_1 = -9999
+
+            try:
+                xp_1 = int(xp_1)
+            except:
+                xp_1 = -9999
+
+
+
+
+            money_finale = money_1
+            xp_finale = xp_1
+
+            if money_finale == -9999: money_finale = self.env.money
+            if xp_finale == -9999: xp_finale = self.env.xp
         except:
-            money_1 = -9999
-
-        try:
-            xp_1 = int(xp_1)
-        except:
-            xp_1 = -9999
-
-
-        print(f"{money_1}  {xp_1}")
-
-        money_finale = money_1
-        xp_finale = xp_1
-
-        if money_finale == -9999: money_finale = self.env.money
-        if xp_finale == -9999: xp_finale = self.env.xp
-        
+            money_finale = self.env.money
+            xp_finale = self.env.xp
         
         return money_finale, xp_finale
 

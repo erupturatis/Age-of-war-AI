@@ -45,7 +45,7 @@ use ability(1 action)
 Dependencies
 
 numpy
-pytesseract
+paddle ocr
 open-cv
 scipy 
 neat-python

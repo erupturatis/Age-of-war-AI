@@ -44,12 +44,7 @@ class Master(object):
             self.data.append(list())
 
 
-    def start_game(self, window_num):
-        pass
 
-    def play_again(self, window_num):
-        pass
-    
     def save_all_data_packets(self):
         for window_num in range(len(self.envs)):
             img = self.screenshots[window_num]
@@ -102,7 +97,7 @@ class Master(object):
         screenshot = self.wm.screenshot()
         self.screenshots[window_num] = screenshot
         env = self.envs[window_num]
-        #print(f"{self.envs[window_num].money} in data")
+
         time1 = time.time()
         gm = self.gms[window_num] 
         gm.ocr = self.ocr
@@ -110,7 +105,7 @@ class Master(object):
         gm.click_game()
         pyautogui.moveTo(500,1300)
         ended = gm.check_if_ended()
-        # print(ended)
+
         if ended:
             victory = gm.check_victory()
             return victory, True
@@ -242,7 +237,7 @@ class Master(object):
 
         #self.wm.defocus_window(window_num)
         time2 = time.time()
-        # print(time2-time1)
+
   
         data_packet = [
             ["number of troops in training", in_train],
@@ -261,24 +256,19 @@ class Master(object):
             ["turrets", new_turrets],
         ]
         # normalizing money value to age
-        tier1_cost = GLOBAL_VALUES["troops"][env.age]["tier3"]
+        tier3_cost = GLOBAL_VALUES["troops"][env.age]["tier3"]
         
         env.money = money
         env.xp = xp
-        env.revert_turret_buying()
-        # print(money)
-        money = money / tier1_cost
-        # print(money)
-        # print(tier1_cost)
-        # print("EXPERIENCE")
-        # print(xp)
+
+        money = money / tier3_cost
+
         divider =  GLOBAL_VALUES["experience"][env.age-1]
         if divider == None:
             xp = 0
         else:
             xp = xp / divider
-        # print(xp)
-        # print(GLOBAL_VALUES["experience"][env.age-1])
+
         if ability == True:
             ability = 1
         else:
@@ -295,7 +285,7 @@ class Master(object):
         
     
 if __name__ == "__main__":
-    number_of_windows = 1
+    number_of_windows = 2
     difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
