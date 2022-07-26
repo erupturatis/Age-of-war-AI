@@ -61,14 +61,14 @@ response_replace_rate   = 0.0
 # connection weight options
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 1
-weight_min_value        = -1
-weight_mutate_power     = 0.15
+weight_max_value        = 5
+weight_min_value        = 0
+weight_mutate_power     = 0.1
 weight_mutate_rate      = 0.8
 weight_replace_rate     = 0.2
 
 [DefaultSpeciesSet]
-compatibility_threshold = 3.0
+compatibility_threshold = 2.0
 
 [DefaultStagnation]
 species_fitness_func = max

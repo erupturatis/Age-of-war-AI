@@ -5,6 +5,8 @@ import os
 import pickle
 from random import choices
 from scipy.stats import stats
+import math
+
 
 
 
@@ -19,7 +21,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 4
+    generation = 0
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -35,6 +37,8 @@ class NeatClass(object):
         """Compute softmax values for each sets of scores in x."""
         e_x = np.exp(x - np.max(x))
         return e_x / e_x.sum()
+
+    
 
     def random_actions(self):
         for i in range(100):
@@ -122,7 +126,7 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 25 == 0:
+            if interations % 5 == 0:
                 self.master.save_all_data_packets()
 
             for i in range(self.number_of_envs):
@@ -153,7 +157,7 @@ class NeatClass(object):
                     env.restart_game()
                     self.networks_training[i] = self.next_nn
                     self.next_nn += 1
-                    print(f"got to {self.next_nn} network")
+                    #print(f"got to {self.next_nn} network")
                     env.defocus()
                     continue
 
@@ -169,6 +173,7 @@ class NeatClass(object):
 
                 #print(f"actions before Zscore {action}")
                 action = stats.zscore(action)
+                self.master.data[env.assigned_window].append(action)
                 #print(f"actions after Zscore {action}")
                 action = self.softmax(action)
 
@@ -324,7 +329,7 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
-        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-4")
+        #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-4")
 
         p.add_reporter(neat.StdOutReporter(True))
  

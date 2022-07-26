@@ -8,6 +8,7 @@ import time
 import os
 from paddleocr import PaddleOCR,draw_ocr
 import logging
+import math
 # about 0.25 seconds per screenshot
 # 4 windows would mean an action per second which should be enough
 
@@ -44,6 +45,19 @@ class Master(object):
             self.data.append(list())
 
 
+    def stable_sigmoid(self, x):
+        if type(x) == list:
+            x_new = [self.stable_sigmoid(i) for i in x]
+            return x_new
+        else:
+            if x >= 0:
+                z = math.exp(-x)
+                sig = 1 / (1 + z)
+                return sig
+            else:
+                z = math.exp(x)
+                sig = z / (1 + z)
+                return sig
 
     def save_all_data_packets(self):
         for window_num in range(len(self.envs)):
@@ -210,7 +224,8 @@ class Master(object):
             tier,turr_age = turret[0], turret[1]
             
             if turr_age != 0:
-                new_turrets.append(tier) # turret exists
+                sig_tier = self.stable_sigmoid(tier)
+                new_turrets.append(sig_tier) # turret exists
                 if turr_age == env.age:
                     new_turrets.append(1)
                 else:
@@ -274,7 +289,9 @@ class Master(object):
         else:
             ability = 0
        
-        
+        player_troops_total = self.stable_sigmoid(player_troops_total)
+        enemy_troops_total = self.stable_sigmoid(enemy_troops_total)
+
         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
