@@ -176,7 +176,7 @@ class Env(object):
     def add_turret_slot(self):
         if GLOBAL_VALUES["turret_slots"][self.total_slots-1] == None:
             return False
-        if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots-1] * 1.25:
+        if self.money >= GLOBAL_VALUES["turret_slots"][self.total_slots-1]:
             #print(f"money buying slot {self.money}")
             self.costly_action_taken = 1
             #self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]

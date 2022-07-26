@@ -21,7 +21,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 0
+    generation = 3
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -126,7 +126,7 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 5 == 0:
+            if interations % 100 == 0:
                 self.master.save_all_data_packets()
 
             for i in range(self.number_of_envs):
@@ -329,7 +329,7 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
-        #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-4")
+        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-3")
 
         p.add_reporter(neat.StdOutReporter(True))
  
