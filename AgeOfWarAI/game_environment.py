@@ -39,9 +39,9 @@ class Env(object):
         "buy_turret_slot",
         "turret_tier1","turret_tier2","turret_tier3",
         "sell_turret1","sell_turret2","sell_turret3","sell_turret4",
-        #"ability",
         "evolve",
         "wait",
+        "ability",
     ]
     
 
@@ -159,12 +159,13 @@ class Env(object):
     
 
     def use_ability(self):
-
         if self.check_ability_avalability():
             self.ability_used = time.time()
             pos = self.MOUSE_VALUES['special']
             pg.moveTo(*pos)
             pg.click()
+            return True
+        return False
 
     def check_ability_avalability(self):
         if self.ability_used == None: return True
@@ -172,6 +173,11 @@ class Env(object):
         if seconds - self.ability_used >= 60:
             return True
         return False
+
+    def check_ability_time(self):
+        seconds = time.time()
+        if self.ability_used == None: return 60
+        return seconds - self.ability_used
 
     def add_turret_slot(self):
         if GLOBAL_VALUES["turret_slots"][self.total_slots-1] == None:
@@ -259,8 +265,8 @@ class Env(object):
             "sell_turret3":self.sell_turret3,
             "sell_turret4":self.sell_turret4,
             "evolve":self.upgrade_age,
-            #"ability":self.use_ability,
             "wait":self.nothing,
+            "ability":self.use_ability,
         }
         #print(f"{self.assigned_window} with action {action}")
         action = ACTIONS_DICT[action]

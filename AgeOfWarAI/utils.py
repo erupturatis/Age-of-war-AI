@@ -45,5 +45,5 @@ def plot_graph(values):
 if __name__ == "__main__":
     a = WindowManagement()
     a.focus_window()
-    #get_mouse_position()
+    get_mouse_position()
 

@@ -107,17 +107,21 @@ class Master(object):
 
     def data_for_window(self, window_num):
         # screenshot included in data flow
+        env = self.envs[window_num]
         
+        if env.check_ability_time < 6.5 :
+            pyautogui.moveTo(500,500) # recentering screen
+            time.sleep(.25)
+
         screenshot = self.wm.screenshot()
         self.screenshots[window_num] = screenshot
-        env = self.envs[window_num]
-
+        
+        gm.screenshot = self.screenshots[window_num]
         time1 = time.time()
         gm = self.gms[window_num] 
         gm.ocr = self.ocr
-        gm.screenshot = self.screenshots[window_num]
-        gm.click_game()
-        pyautogui.moveTo(500,1300)
+        
+        
         ended = gm.check_if_ended()
 
         if ended:

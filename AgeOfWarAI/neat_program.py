@@ -6,6 +6,7 @@ import pickle
 from random import choices
 from scipy.stats import stats
 import math
+import pyautogui
 
 
 
@@ -21,7 +22,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 3
+    generation = 0
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -134,7 +135,7 @@ class NeatClass(object):
                     time.sleep(0.25)
                     continue
                 env = self.envs[i]
-  
+
                 env.focus()
                 inputs, ended = env.get_inputs()
       
@@ -151,7 +152,7 @@ class NeatClass(object):
 
                     if inputs == True:
                         print("AI WON")
-                        self.genomes_list[self.networks_training[i]].fitness += 10000
+                        self.genomes_list[self.networks_training[i]].fitness += 1000
 
                     #print(f"FITNESS: {self.genomes_list[self.networks_training[i]].fitness}")
                     env.restart_game()
@@ -178,7 +179,9 @@ class NeatClass(object):
                 action = self.softmax(action)
 
                 #print(f"ACTIONS AFTER SOFTMAX {action}")
-                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+                env.printing = True
+                action[14] += 1
 
                 if env.xp > 10000000 :
                     # the ai hit a infinite loop so it will lose on purpose
@@ -192,7 +195,13 @@ class NeatClass(object):
                 action = choices(population, action)
                 #print(env.xp)
                 self.act += 1
-                
+                if action[0] == 13:
+                    self.genomes_list[self.networks_training[i]].fitness += 0.1
+
+                if env.check_ability_time < 6.5 :
+                    pyautogui.moveTo(500,500) # recentering screen
+                    time.sleep(.25)
+
                 Taken = env.take_action(*action)
                 # print(Taken)
                 # print("--------------------------")
@@ -200,7 +209,7 @@ class NeatClass(object):
                     self.valid_actions_streak[i] += 1
                     if self.valid_actions_streak[i] > 4:
                         self.valid_actions_streak[i] = 4
-                    self.genomes_list[self.networks_training[i]].fitness += 0.05 * self.valid_actions_streak[i]
+                    self.genomes_list[self.networks_training[i]].fitness += 0.015 * self.valid_actions_streak[i]
                     # bonus for taking a valid action
                 else:
                     self.valid_actions_streak[i] = 0
@@ -312,7 +321,7 @@ class NeatClass(object):
 
         self.start_envs()
         self.run(config_path)
-        #self.run_winner(config_path, "winner-generation 11")
+        #self.run_winner(config_path, "winner-generation 10")
 
         # self.random_actions()
 
@@ -329,7 +338,7 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
         p = neat.Population(config)
-        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-3")
+        #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-9")
 
         p.add_reporter(neat.StdOutReporter(True))
  
