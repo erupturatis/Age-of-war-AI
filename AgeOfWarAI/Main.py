@@ -108,17 +108,17 @@ class Master(object):
     def data_for_window(self, window_num):
         # screenshot included in data flow
         env = self.envs[window_num]
-        
-        if env.check_ability_time < 6.5 :
-            pyautogui.moveTo(500,500) # recentering screen
+        pyautogui.moveTo(500,500) # recentering screen
+        if env.check_ability_time() < 6.5 :
             time.sleep(.25)
+        else:
+            time.sleep(.1)
 
         screenshot = self.wm.screenshot()
         self.screenshots[window_num] = screenshot
         
-        gm.screenshot = self.screenshots[window_num]
-        time1 = time.time()
         gm = self.gms[window_num] 
+        gm.screenshot = self.screenshots[window_num]
         gm.ocr = self.ocr
         
         
@@ -128,26 +128,33 @@ class Master(object):
             victory = gm.check_victory()
             return victory, True
 
+  
 
-        player_age_index = gm.scan_age(flip = False)
+        if env.check_ability_time() > 6.5 :
+            player_age_index = gm.scan_age(flip = False)
+            in_train = gm.scan_training()
+            gm.initial_scan_health()
+            player_health, enemy_health = gm.scan_health() # not meaningful time
+            if player_health == None or enemy_health == None:
+                player_health = env.hp
+                enemy_health = env.enemy_hp
+            enemy_age_index = gm.scan_age(flip = True)
+        else:
+            player_age_index = env.age
+            in_train = 0
+            player_health = env.hp
+            enemy_health = env.enemy_hp
+            enemy_age_index = env.enemy_age
+
+        money, xp = gm.scan_money_and_xp(env) 
+        ability = env.check_ability_avalability()
+
         Error = gm.scan_cancel()
         if Error:
             pyautogui.click(1675,100)
         if player_age_index != None:
             env.age = player_age_index
 
-        money, xp = gm.scan_money_and_xp(env) # 0.5 from 2 analysis pytesseract
-     
-        in_train = gm.scan_training()
-
-        gm.initial_scan_health()
-
-        player_health, enemy_health = gm.scan_health() # not meaningful time
-        
-        env = self.envs[window_num]
-        
-        ability = env.check_ability_avalability()
-        
         max_player = 1
         max_enemy = 0
         enemy_troops_total = [0,0,0,0]
@@ -241,8 +248,8 @@ class Master(object):
         
         age = [0,0,0,0,0]
         age[env.age-1] = 1
-
-        enemy_age_index = gm.scan_age(flip = True)
+     
+        
 
         if env.enemy_age != enemy_age_index:
             env.enemy_age = enemy_age_index
@@ -274,6 +281,8 @@ class Master(object):
             ["enemy age recently", env.enemy_aged_recently],
             ["turrets", new_turrets],
         ]
+        env.hp = player_health
+        env.enemy_hp = enemy_health
         # normalizing money value to age
         tier3_cost = GLOBAL_VALUES["troops"][env.age]["tier3"]
         
@@ -312,11 +321,6 @@ if __name__ == "__main__":
     neats = NeatClass(master.envs)
     neats.master = master
     neats.main()
-    
-
-    
-
-
 
 
 

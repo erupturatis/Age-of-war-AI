@@ -266,16 +266,19 @@ class GameVision(object):
         enemy_hp = None
         # calculating hp, checking if the values closer to black (the missing hp)
         # are appearing more than the others
-        if player_counts[0][1] < player_counts[1][1]:
-            player_hp = player_counts[1][0]/(player_counts[0][0]+player_counts[1][0])
-        else:
-            player_hp = player_counts[0][0]/(player_counts[0][0]+player_counts[1][0])
+        try:
+            if player_counts[0][1] < player_counts[1][1]:
+                player_hp = player_counts[1][0]/(player_counts[0][0]+player_counts[1][0])
+            else:
+                player_hp = player_counts[0][0]/(player_counts[0][0]+player_counts[1][0])
 
-        if enemy_counts[0][1] < enemy_counts[1][1]:
-            enemy_hp = enemy_counts[1][0]/(enemy_counts[0][0]+enemy_counts[1][0])
-        else:
-            enemy_hp = enemy_counts[0][0]/(enemy_counts[0][0]+enemy_counts[1][0])
-
+            if enemy_counts[0][1] < enemy_counts[1][1]:
+                enemy_hp = enemy_counts[1][0]/(enemy_counts[0][0]+enemy_counts[1][0])
+            else:
+                enemy_hp = enemy_counts[0][0]/(enemy_counts[0][0]+enemy_counts[1][0])
+        except:
+            player_hp = None
+            enemy_hp = None
 
         return player_hp, enemy_hp
 

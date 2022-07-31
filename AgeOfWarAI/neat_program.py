@@ -22,7 +22,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 0
+    generation = 7
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -180,8 +180,9 @@ class NeatClass(object):
 
                 #print(f"ACTIONS AFTER SOFTMAX {action}")
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-                env.printing = True
-                action[14] += 1
+
+                #env.printing = True
+                #action[14] += 1
 
                 if env.xp > 10000000 :
                     # the ai hit a infinite loop so it will lose on purpose
@@ -198,7 +199,7 @@ class NeatClass(object):
                 if action[0] == 13:
                     self.genomes_list[self.networks_training[i]].fitness += 0.1
 
-                if env.check_ability_time < 6.5 :
+                if env.check_ability_time() < 6.5 :
                     pyautogui.moveTo(500,500) # recentering screen
                     time.sleep(.25)
 
@@ -293,7 +294,7 @@ class NeatClass(object):
             action = stats.zscore(action)
             action = self.softmax(action)
 
-            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13]
+            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
             action = choices(population, action)
             
 
@@ -321,7 +322,7 @@ class NeatClass(object):
 
         self.start_envs()
         self.run(config_path)
-        #self.run_winner(config_path, "winner-generation 10")
+        #self.run_winner(config_path, "winner-generation 6")
 
         # self.random_actions()
 
@@ -337,8 +338,8 @@ class NeatClass(object):
                             config_file)
 
         # Create the population, which is the top-level object for a NEAT run.
-        p = neat.Population(config)
-        #p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-9")
+        #p = neat.Population(config)
+        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-7")
 
         p.add_reporter(neat.StdOutReporter(True))
  

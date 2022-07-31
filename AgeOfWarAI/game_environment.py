@@ -19,6 +19,8 @@ class Env(object):
     prev_money = -1
     printing = False
     costly_action_taken = -1
+    hp = 100
+    enemy_hp = 100
 
     turrets = [
         [0,0],
