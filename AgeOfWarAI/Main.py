@@ -164,7 +164,11 @@ class Master(object):
         if env.player_aged_recently > 0:
             # also checks for troops from previous age
             env.player_aged_recently -= 1 
-            arr1,arr2 = gm.scan_troops(False, env.age, True)
+            try:
+                arr1,arr2 = gm.scan_troops(False, env.age, True)
+            except:
+                arr1 = [0,0,0,0]
+                arr2 = [0,0,0,0]
             if gm.maximum != 0:
                 max_player = gm.maximum / gm.width
                 gm.maximum = 0
@@ -194,8 +198,11 @@ class Master(object):
 
         if env.enemy_aged_recently > 0:
             env.enemy_aged_recently -= 1
-         
-            arr1,arr2 = gm.scan_troops(True, env.enemy_age, True)
+            try:
+                arr1,arr2 = gm.scan_troops(True, env.enemy_age, True)
+            except:
+                arr1=[0,0,0,0]
+                arr2=[0,0,0,0]
             if gm.maximum != -0:
                 max_enemy = gm.maximum / gm.width
                 gm.maximum = 0

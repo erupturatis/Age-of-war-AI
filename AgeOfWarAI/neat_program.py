@@ -8,7 +8,7 @@ from scipy.stats import stats
 import math
 import pyautogui
 import visualize
-import Main
+from age_of_war_numerical import Game
 
 
 
@@ -23,7 +23,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 6
+    generation = 0
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -129,7 +129,7 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 2 == 0:
+            if interations % 100 == 0:
                 self.master.save_all_data_packets()
 
             for i in range(self.number_of_envs):
@@ -141,7 +141,7 @@ class NeatClass(object):
                 env.focus()
                 inputs, ended = env.get_inputs()
       
-                if ended or True:
+                if ended:
                     if self.next_nn >= self.POP_SIZE:
                         finished_envs += 1
                         
@@ -168,23 +168,19 @@ class NeatClass(object):
 
                 net = self.networks[self.networks_training[i]]
 
-                #print(inputs)
-                #print(len(inputs))
+
                 action = net.activate(inputs)
                 action = np.array(action)
                 self.master.data[env.assigned_window].append(action)
 
-                #print(f"actions before Zscore {action}")
                 action = stats.zscore(action)
                 self.master.data[env.assigned_window].append(action)
-                #print(f"actions after Zscore {action}")
+
                 action = self.softmax(action)
 
-                #print(f"ACTIONS AFTER SOFTMAX {action}")
+
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
-                #env.printing = True
-                #action[14] += 1
 
                 if env.xp > 10000000 :
                     # the ai hit a infinite loop so it will lose on purpose
@@ -230,8 +226,8 @@ class NeatClass(object):
                 cnt = i
         
         self.fitness_med = (self.generation, fitness / len(genomes), mx)
-        print(self.population.best_genome)
-        print(self.population.best_genome[1])
+        # print(self.population.best_genome)
+        # print(self.population.best_genome[1])
 
         try:
             with open(f'winner-generation {self.generation}', 'wb') as f:
@@ -247,6 +243,78 @@ class NeatClass(object):
             pass
 
         self.generation += 1
+
+    def eval_genomes_numerical(self, genomes, config):
+        self.POP_SIZE = len(genomes)
+
+        evaluating = True
+        # self.genomes_list = list()
+        # self.networks = list()
+        # self.inactive_envs = list()
+        # self.valid_actions_streak = list()
+        # self.next_nn = 0
+        fitness = 0
+
+        time1 = time.time()
+        # for i in range(self.number_of_envs):
+        #     env = self.envs[i]
+        #     env.focus()
+        #     self.networks_training[i] = self.next_nn
+        #     self.next_nn += 1
+        #     env.restart_game()
+        #     env.defocus()
+      
+        # finished_envs = 0
+
+        for g in genomes:
+
+            genome = g[1]
+            net = neat.nn.FeedForwardNetwork.create(genome, config) 
+            genome.fitness = 0
+            game = Game()
+
+            game.step(30)
+            inputs = game.get_inputs()
+
+            action = net.activate(inputs)
+            action = np.array(action)
+            action = stats.zscore(action)
+            action = self.softmax(action)
+            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+
+            action = choices(population, action)
+            Taken = game.take_action(*action)
+        
+        
+
+        mx = 0
+        cnt = 0
+        for i,g in enumerate(genomes):
+            genome = g[1]
+            fitness += genome.fitness
+            if genome.fitness > mx:
+                mx = genome.fitness
+                cnt = i
+        
+        self.fitness_med = (self.generation, fitness / len(genomes), mx)
+        # print(self.population.best_genome)
+        # print(self.population.best_genome[1])
+
+        try:
+            with open(f'winner-generation {self.generation}', 'wb') as f:
+                pickle.dump(genomes[cnt], f)
+        except:
+            pass
+        
+        try:
+            with open(f'fitness_scores{self.generation}.txt', 'w') as f:
+                f.write(f"{self.fitness_med}")
+            f.close()
+        except:
+            pass
+
+        self.generation += 1
+
 
 
 
@@ -371,5 +439,3 @@ class NeatClass(object):
         # print('\n Best genome:\n{!s}'.format(winner))
         # print(stats)
      
-if __name__ == "__main__":
-    Main.run()
