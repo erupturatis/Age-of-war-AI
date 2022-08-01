@@ -313,14 +313,16 @@ class Master(object):
         self.scans += 1
         return inputs, False
         
-    
-if __name__ == "__main__":
+def run():
     number_of_windows = 2
     difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
     neats.master = master
     neats.main()
+
+if __name__ == "__main__":
+    run()
 
 
 

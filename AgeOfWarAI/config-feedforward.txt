@@ -21,7 +21,7 @@ bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
 bias_max_value          = 2.0
 bias_min_value          = -2.0
-bias_mutate_power       = 0.15
+bias_mutate_power       = 0.1
 bias_mutate_rate        = 0.7
 bias_replace_rate       = 0.1
 
@@ -35,14 +35,14 @@ conn_delete_prob        = 0.5
 
 # connection enable options
 enabled_default         = True
-enabled_mutate_rate     = 0.02
+enabled_mutate_rate     = 0.2
 
 feed_forward            = True
 initial_connection      = full_direct
 
 # node add/remove rates
-node_add_prob           = 0.2
-node_delete_prob        = 0.2
+node_add_prob           = 0.4
+node_delete_prob        = 0.4
 
 # network parameters
 num_hidden              = 0
@@ -54,16 +54,16 @@ response_init_mean      = 1.0
 response_init_stdev     = 0.0
 response_max_value      = 10.0
 response_min_value      = -10.0
-response_mutate_power   = 0.0
-response_mutate_rate    = 0.0
+response_mutate_power   = 0.01
+response_mutate_rate    = 0.01
 response_replace_rate   = 0.0
 
 # connection weight options
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 5
-weight_min_value        = 0
-weight_mutate_power     = 0.1
+weight_max_value        = 10
+weight_min_value        = -1
+weight_mutate_power     = 0.4
 weight_mutate_rate      = 0.8
 weight_replace_rate     = 0.2
 
@@ -72,9 +72,9 @@ compatibility_threshold = 2.0
 
 [DefaultStagnation]
 species_fitness_func = max
-max_stagnation       = 20
+max_stagnation       = 10
 species_elitism      = 2
 
 [DefaultReproduction]
 elitism            = 2
-survival_threshold = 0.2
+survival_threshold = 0.3

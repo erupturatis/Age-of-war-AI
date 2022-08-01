@@ -7,7 +7,8 @@ from random import choices
 from scipy.stats import stats
 import math
 import pyautogui
-
+import visualize
+import Main
 
 
 
@@ -22,12 +23,13 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 7
+    generation = 6
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
     act = 0
     fitness_med = list()
+    population = None
  
 
     def __init__(self, envs) -> None:
@@ -127,7 +129,7 @@ class NeatClass(object):
 
             interations += 1
 
-            if interations % 100 == 0:
+            if interations % 2 == 0:
                 self.master.save_all_data_packets()
 
             for i in range(self.number_of_envs):
@@ -139,7 +141,7 @@ class NeatClass(object):
                 env.focus()
                 inputs, ended = env.get_inputs()
       
-                if ended:
+                if ended or True:
                     if self.next_nn >= self.POP_SIZE:
                         finished_envs += 1
                         
@@ -228,6 +230,9 @@ class NeatClass(object):
                 cnt = i
         
         self.fitness_med = (self.generation, fitness / len(genomes), mx)
+        print(self.population.best_genome)
+        print(self.population.best_genome[1])
+
         try:
             with open(f'winner-generation {self.generation}', 'wb') as f:
                 pickle.dump(genomes[cnt], f)
@@ -338,27 +343,33 @@ class NeatClass(object):
                             config_file)
 
         # Create the population, which is the top-level object for a NEAT run.
-        #p = neat.Population(config)
-        p = neat.Checkpointer().restore_checkpoint("neat-checkpoint-7")
 
+        p = neat.Population(config)
         p.add_reporter(neat.StdOutReporter(True))
  
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
         p.add_reporter(neat.Checkpointer(1))
 
-        time1 = time.time()
-        #
+        # winner = "winner-generation 6"
+        # with open(f"{winner}", "rb") as f:
+        #     genome = pickle.load(f)
+
+        # winner = genome
+        # print(winner[1].fitness)
+        # visualize.draw_net(config, winner[1], True)
+
+      
         winner = p.run(self.eval_genomes, 50)
-        time2 = time.time()
 
-        with open('winner-feedforward', 'wb') as f:
-            pickle.dump(winner, f)
+        # with open('winner-feedforward', 'wb') as f:
+        #     pickle.dump(winner, f)
         
-        with open('stats-feedforward', 'wb') as f:
-            pickle.dump(stats, f)
+        # with open('stats-feedforward', 'wb') as f:
+        #     pickle.dump(stats, f)
 
-        print('\n Best genome:\n{!s}'.format(winner))
-        print(stats)
-        print(f"everthing took about {time2-time1}")
-
+        # print('\n Best genome:\n{!s}'.format(winner))
+        # print(stats)
+     
+if __name__ == "__main__":
+    Main.run()
