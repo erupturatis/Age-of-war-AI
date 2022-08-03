@@ -1,5 +1,8 @@
 #numerical version of the game to speed up training, simulating a gym environment for age of war
 from GLOBALS import GLOBAL_VALUES
+import math
+import time
+from random import choices
 
 class Game(object):
     printing = False
@@ -20,7 +23,7 @@ class Game(object):
             self.damage = damage
             self.range = range
             self.age = age
-            self.length = length
+            self.length = length # minimum distance between this troop and the one behind it
             self.tier = tier
             self.position = 0
             reward = GLOBAL_VALUES["troops"][age][f"tier{tier}"] * 1.33
@@ -33,10 +36,14 @@ class Game(object):
     class Turret(object):
         damage = None
         range = None
+        tier = None
+        age = None
 
-        def __init__(self, damage, range) -> None:
+        def __init__(self, damage, range, age, tier) -> None:
             self.damage = damage
             self.range = range
+            self.age = age
+            self.tier = tier
     
 
     TURRETS_COST = GLOBAL_VALUES['turrets']
@@ -52,6 +59,7 @@ class Game(object):
         "ability",
     ]
     BASE_HP = [500, 1100, 2000, 3200, 4700]
+    last_enemy_action = 0
 
     TURRET_MATCHER = {
         # matching by age and tier
@@ -121,6 +129,7 @@ class Game(object):
 
     player_money = 175
     player_xp = 0
+    battle_place = 1
 
     player_age = 1
     enemy_age = 1
@@ -132,6 +141,8 @@ class Game(object):
     total_slots = 1
     enemy_slots = 1
     total_enemy_slots = 1
+    ability_used = None
+    iterations = 0
 
     def training(self):
         if len(self.in_training) > 0:
@@ -150,14 +161,29 @@ class Game(object):
 
     def __init__(self) -> None:
         pass
+    
+    def stable_sigmoid(self, x):
+        if type(x) == list:
+            x_new = [self.stable_sigmoid(i) for i in x]
+            return x_new
+        else:
+            if x >= 0:
+                z = math.exp(-x)
+                sig = 1 / (1 + z)
+                return sig
+            else:
+                z = math.exp(x)
+                sig = z / (1 + z)
+                return sig
 
     def debug(self):
         print(f"player age {self.player_age}")
         print(f"player base {self.player_base}")
         print(f"player money {self.player_money}")
+        print(f"player xp {self.player_xp}")
         print(f"player troops {self.player_troops}")
         print(f"player turrets {self.player_turrets}")
-        print(f"player xp {self.player_xp}")
+        
     
     def spawn_troop(self, tier):
         if self.player_money >= self.TROOPS_COST[self.age][f'tier{tier}']:
@@ -186,8 +212,9 @@ class Game(object):
         if self.player_money >= self.TURRETS_COST[self.player_age][f'tier{tier}'] and self.available_slots > 0:
             self.money -= self.TURRETS_COST[self.player_age][f'tier{tier}']
             obj = self.TURRET_MATCHER[f"{self.player_age}"][f"{tier}"] # matching with the stats
+            turret = self.Turret(*obj, self.player_age, tier)
             self.player_turrets.append(
-                (obj, tier, self.player_age)
+                turret
             )
             self.available_slots -= 1
             return True
@@ -217,6 +244,15 @@ class Game(object):
     
     def nothing(self):
         return True
+    
+    def check_ability(self):
+        if self.ability_used == None:
+            return True
+        
+        if self.iterations - self.ability_used > 60:
+            return True
+        return False
+
     
     def use_ability(self):
         i = len(self.enemy_troops)-1
@@ -314,26 +350,166 @@ class Game(object):
         self.total_enemy_slots += 1
         self.enemy_slots += 1
 
-    def enemy_action(self):
-        # enemy taking action
-        pass
+    
 
     def get_inputs(self):
-        inputs = (self.in_training, self.player_base )
+        player_hp = self.player_base/self.BASE_HP[self.player_age-1]
+        enemy_hp = self.enemy_base/self.BASE_HP[self.enemy_age-1]
+        tier3_cost = GLOBAL_VALUES["troops"][self.player_age]["tier3"]
+        money = self.player_money/tier3_cost
+        xp = self.player_xp/GLOBAL_VALUES["experience"][self.player_age-1]
+        battle_place = self.battle_place
+        ability = self.check_ability()
+        ability = 1 if ability else 0
+        player_troops_total = [0,0,0,0]
+        for troop in self.player_troops:
+            player_troops_total[troop.tier-1] += 1
+        enemy_troops_total = [0,0,0,0]
+        for troop in self.enemy_troops:
+            enemy_troops_total[troop.tier-1] += 1
+        slots_available = self.available_slots
+        age = [0,0,0,0,0]
+        age[self.player_age-1] = 1
+        enemy_age = [0,0,0,0,0]
+        enemy_age[self.enemy_age-1] = 1
+        new_turrets = list()
+        
+
+        for turret in self.player_turrets:
+            turr_age = turret.age
+            tier = turret.tier
+            if turr_age != 0:
+                sig_tier = self.stable_sigmoid(tier)
+                new_turrets.append(sig_tier) # turret exists
+                if turr_age == self.player_age:
+                    new_turrets.append(1)
+                else:
+                    new_turrets.append(-1)
+            else:
+                new_turrets.append(0)
+                new_turrets.append(0)
+        
+        while len(new_turrets) != 8:
+            new_turrets.append(0)
+
+        inputs = (self.in_training, player_hp, enemy_hp, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
 
     def move_troops(self):
-        pass
+        if (self.enemy_troops[0].position - self.player_troops[0].position) <= 3:
+            pass # they attack each other
+        elif (self.enemy_troops[0].position - self.player_troops[0].position) <= 20:
+            dif = (self.enemy_troops[0].position - self.player_troops[0].position)
+            self.enemy_troops[0].position -= dif/2
+            self.player_troops[0].position += dif/2
+            self.enemy_troops[0].position += 1
+            self.player_troops[0].position -= 1
+        else:
+            self.enemy_troops[0].position -= 10
+            self.player_troops[0].position += 10
+            # calculating positions of troops facing each other
 
-    def shoot_turrets(self):
-        pass
+        self.enemy_troops[0].position = max(0, self.enemy_troops[0].position)
+        self.player_troops[0].position = min(100, self.player_troops[0].position)
+        
+        for i in range(len(self.enemy_troops)):
+            # calculating positions for enemy troops
+            if i == 0 : continue
+            pos1 = self.enemy_troops[i-1].position
+            pos2 = self.enemy_troops[i].position
+            if pos2 - pos1 <= self.enemy_troops[i-1].length:
+                pass
+            elif pos2 - pos1 > self.enemy_troops[i-1].length and pos2 - pos1 <= 10 + self.enemy_troops[i-1].length:
+                pos2 = pos1 + self.enemy_troops[i-1].length
+            else:
+                pos2 -= 10
+
+            self.enemy_troops[i] = pos2
+
+        for i in range(len(self.player_troops)):
+            # calculating positions for player troops
+            if i == 0 : continue
+            pos1 = self.enemy_troops[i-1].position
+            pos2 = self.enemy_troops[i].position
+            if pos1 - pos2 <= self.enemy_troops[i-1].length:
+                pass
+            elif pos1 - pos2 > self.enemy_troops[i-1].length and pos1 - pos2 <= 10 + self.enemy_troops[i-1].length:
+                pos2 = pos1 - self.enemy_troops[i-1].length
+            else:
+                pos2 += 10
+
+            self.enemy_troops[i] = pos2        
+
+
+    def attacks(self):
+        # attacking bases
+        if len(self.enemy_troops) == 0:
+            for troop in self.player_troops:
+                if 100 - troop.position <= troop.range:
+                    self.enemy_base -= troop.damage
+
+        if len(self.player_troops) == 0:
+            for troop in self.enemy_troops:
+                if troop.position <= troop.range:
+                    self.player_base -= troop.damage
+
+        # attacking enemy troops
+        pos_enemy = self.enemy_troops[0]
+        for troop in self.player_troops:
+            if pos_enemy - troop.position <= troop.range:
+                self.enemy_troops[0].hp -= troop.damage
+
+        # attacking player troops
+        pos_player = self.player_troops[0]
+        for troop in self.enemy_troops:
+            if troop.position - pos_player <= troop.range:
+                self.player_troops[0].hp -= troop.damage
+        
+        # attacking turrets
+        pos_enemy = self.enemy_troops[0]
+        for turret in self.player_turrets:
+            if pos_enemy <= turret.range:
+                self.enemy_troops[0].hp -= turret.damage
+
+        pos_player = self.player_troops[0]
+        for turret in self.player_turrets:
+            if 100 - pos_player <= turret.range:
+                self.player_troops[0].hp -= turret.damage
+
+        # eliminating dead troops
+        if self.player_troops[0].hp < 0:
+            self.player_troops.pop(0)
+        if self.enemy_troops[0].hp < 0:
+            self.enemy_troops.pop(0)
+        
+
+
+    def enemy_action(self):
+        # enemy taking action
+        if self.enemy_age != 5:
+            if self.player_xp / GLOBAL_VALUES[self.player_age-1] > 0.8:
+                self.enemy_age += 1
+                return 
+
+        ACTION = {
+            0: self.spawn_troop_enemy,
+            1: self.add_slot_enemy,
+            2: self.spawn_turret_enemy,
+            3: self.sell_turret_enemy,
+            4: self.upgrade_age
+        }
+        if len(self.enemy_troops) == 0 :
+            population = [0,1,2,3,4,5]
+            actions = []
+            action = choices(population, action)
+
 
     def step(self):
         # will step 1 second in time
-        # before thisthe player will take an action
+        # before this function the player will take an action
         self.enemy_action()
         self.move_troops()
-        self.shoot_turrets()
-        self.debug()
+        self.attacks()
+        
 
 
 

@@ -23,7 +23,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 0
+    generation = 19
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -134,7 +134,7 @@ class NeatClass(object):
 
             for i in range(self.number_of_envs):
                 if self.inactive_envs[i] == 1:
-                    time.sleep(0.25)
+                    time.sleep(1.2)
                     continue
                 env = self.envs[i]
 
@@ -182,7 +182,7 @@ class NeatClass(object):
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
 
-                if env.xp > 10000000 :
+                if env.xp > 6500000 :
                     # the ai hit a infinite loop so it will lose on purpose
                     # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
                     action[8] += 10
@@ -248,23 +248,9 @@ class NeatClass(object):
         self.POP_SIZE = len(genomes)
 
         evaluating = True
-        # self.genomes_list = list()
-        # self.networks = list()
-        # self.inactive_envs = list()
-        # self.valid_actions_streak = list()
-        # self.next_nn = 0
         fitness = 0
 
         time1 = time.time()
-        # for i in range(self.number_of_envs):
-        #     env = self.envs[i]
-        #     env.focus()
-        #     self.networks_training[i] = self.next_nn
-        #     self.next_nn += 1
-        #     env.restart_game()
-        #     env.defocus()
-      
-        # finished_envs = 0
 
         for g in genomes:
 
@@ -273,7 +259,7 @@ class NeatClass(object):
             genome.fitness = 0
             game = Game()
 
-            game.step(30)
+            game.step()
             inputs = game.get_inputs()
 
             action = net.activate(inputs)
@@ -284,6 +270,7 @@ class NeatClass(object):
 
             action = choices(population, action)
             Taken = game.take_action(*action)
+            game.debug()
         
         
 
@@ -399,6 +386,15 @@ class NeatClass(object):
 
         # self.random_actions()
 
+    def vis_winner(self):
+        winner = "winner-generation 19"
+        with open(f"{winner}", "rb") as f:
+            genome = pickle.load(f)
+
+        winner = genome
+        print(winner[1].fitness)
+        visualize.draw_net(config, winner[1], True)
+
     def run(self, config_file):
         
         """
@@ -412,22 +408,15 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
 
-        p = neat.Population(config)
+        #p = neat.Population(config)
+
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-19")
         p.add_reporter(neat.StdOutReporter(True))
  
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
         p.add_reporter(neat.Checkpointer(1))
 
-        # winner = "winner-generation 6"
-        # with open(f"{winner}", "rb") as f:
-        #     genome = pickle.load(f)
-
-        # winner = genome
-        # print(winner[1].fitness)
-        # visualize.draw_net(config, winner[1], True)
-
-      
         winner = p.run(self.eval_genomes, 50)
 
         # with open('winner-feedforward', 'wb') as f:
