@@ -47,7 +47,7 @@ node_delete_prob        = 0.5
 # network parameters
 num_hidden              = 0
 num_inputs              = 34
-num_outputs             = 11
+num_outputs             = 15
 
 # node response options
 response_init_mean      = 1.0
@@ -68,7 +68,7 @@ weight_mutate_rate      = 0.8
 weight_replace_rate     = 0.2
 
 [DefaultSpeciesSet]
-compatibility_threshold = 1.0
+compatibility_threshold = 1.5
 
 [DefaultStagnation]
 species_fitness_func = max
@@ -77,4 +77,4 @@ species_elitism      = 2
 
 [DefaultReproduction]
 elitism            = 2
-survival_threshold = 0.3
+survival_threshold = 0.4

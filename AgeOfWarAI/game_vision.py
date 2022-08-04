@@ -107,7 +107,7 @@ class GameVision(object):
     def check_if_ended(self):
         img = self.screenshot
         template = cv2.imread(f'AgeOfWarAI/assets/misc/defeat.png')
-        result = self.get_position(img=img, template=template, treshold=0.9)
+        result = self.get_position(img=img, template=template, treshold=0.85)
 
         if len(result) > 0:
             return True
@@ -116,7 +116,7 @@ class GameVision(object):
     def check_victory(self):
         img = self.screenshot
         template = cv2.imread(f'AgeOfWarAI/assets/misc/victory.png')
-        result = self.get_position(img=img, template=template, treshold=0.9)
+        result = self.get_position(img=img, template=template, treshold=0.7)
 
         if len(result) > 0:
             return True

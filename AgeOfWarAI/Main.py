@@ -286,7 +286,8 @@ class Master(object):
             ["player age", age],
             ["enemy age",enemy_age],
             ["enemy age recently", env.enemy_aged_recently],
-            ["turrets", new_turrets],
+            ["new turrets", new_turrets],
+            ["turrets", turrets],
         ]
         env.hp = player_health
         env.enemy_hp = enemy_health

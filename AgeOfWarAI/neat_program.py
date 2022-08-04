@@ -9,6 +9,7 @@ import math
 import pyautogui
 import visualize
 from age_of_war_numerical import Game
+import random
 
 
 
@@ -23,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 19
+    generation = 7
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -134,7 +135,7 @@ class NeatClass(object):
 
             for i in range(self.number_of_envs):
                 if self.inactive_envs[i] == 1:
-                    time.sleep(1.2)
+                    time.sleep(1.3)
                     continue
                 env = self.envs[i]
 
@@ -177,11 +178,9 @@ class NeatClass(object):
                 self.master.data[env.assigned_window].append(action)
 
                 action = self.softmax(action)
-
-
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
-
+                action = choices(population, action)
                 if env.xp > 6500000 :
                     # the ai hit a infinite loop so it will lose on purpose
                     # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
@@ -190,9 +189,8 @@ class NeatClass(object):
                     action[10] += 10
                     action[11] += 10
                     action[13] += 10
+                    action = random.randint(8,11)
 
-                action = choices(population, action)
-                #print(env.xp)
                 self.act += 1
                 if action[0] == 13:
                     self.genomes_list[self.networks_training[i]].fitness += 0.1
@@ -201,8 +199,9 @@ class NeatClass(object):
                     pyautogui.moveTo(500,500) # recentering screen
                     time.sleep(.25)
 
+                #env.printing = True
                 Taken = env.take_action(*action)
-                # print(Taken)
+                
                 # print("--------------------------")
                 if Taken == True:
                     self.valid_actions_streak[i] += 1
@@ -410,7 +409,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-19")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-7")
         p.add_reporter(neat.StdOutReporter(True))
  
         stats = neat.StatisticsReporter()

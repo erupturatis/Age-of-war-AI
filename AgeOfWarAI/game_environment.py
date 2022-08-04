@@ -122,7 +122,7 @@ class Env(object):
         pg.moveTo(*pos)
         pg.click()
 
-    def spawn_turret(self, tier):
+    def spawn_turret(self, tier, aux = False):
 
         if self.money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.available_slots > 0:
             #print(self.available_slots)
@@ -143,11 +143,37 @@ class Env(object):
             pg.click()
 
             self.slots[slot] = 1
-            
-      
+
             self.turrets[slot] = [tier, self.age]
             self.available_slots -= 1
             return True
+        elif self.available_slots == 0:
+          
+            if aux == True:
+                print("something went very wrong with turret replacement")
+            min_age = self.age
+            #print(f"MING AGE {min_age}")
+            turr_sell = 1
+            turr_tier = 1
+            #print(self.turrets)
+            for i,x in enumerate(self.turrets):
+                #print(f"x {x} min age {min_age}")
+                
+                if x[1] <= min_age and x[1] != 0:
+                   # print("entered")
+                    min_age = x[1]
+                    turr_sell = i
+                    turr_tier = x[0]
+
+            if min_age == self.age:
+                return False
+
+            money_returned = int(self.TURRETS_COST[min_age][f'tier{turr_tier}'] / 2)
+            total_money = self.money + money_returned - 1
+            if total_money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.check_ability_time() > 6.5:
+                self.sell_turretn(turr_sell)
+                return self.spawn_turret(tier, True)
+           
         return False
     
     def spawn_turret1(self):
@@ -211,9 +237,11 @@ class Env(object):
             # print(f"selling turret on slot {number}")
             pg.moveTo(*pos)
             pg.click()
+            self.money += self.TURRETS_COST[self.turrets[number][1]][f'tier{self.turrets[number][0]}']
             self.turrets[number] = [0,0]
             self.slots[number] = 0
             self.available_slots += 1
+            
             return True
         return False
     
