@@ -7,7 +7,7 @@ from random import choices
 from scipy.stats import stats
 import math
 import pyautogui
-import visualize
+#import visualize
 from age_of_war_numerical import Game
 import random
 
@@ -31,9 +31,10 @@ class NeatClass(object):
     act = 0
     fitness_med = list()
     population = None
+    env_batch_size = 1
  
 
-    def __init__(self, envs) -> None:
+    def __init__(self, envs = []) -> None:
         self.number_of_envs = len(envs)
         self.envs = envs
 
@@ -180,7 +181,7 @@ class NeatClass(object):
                 action = self.softmax(action)
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
-                 if env.xp > 6500000 :
+                if env.xp > 6500000 :
                     # the ai hit a infinite loop so it will lose on purpose
                     # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
                     action[8] += 10
@@ -375,6 +376,37 @@ class NeatClass(object):
         
             self.master.save_all_data_packets()
 
+    def eval_genomes_unity(self, genomes, config):
+        print("got to eval unity")
+        import socket
+
+        HOST = "192.168.100.11"
+        PORT = 9090
+
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind((HOST, PORT))
+
+        server.listen(100)
+
+        self.POP_SIZE = len(genomes)
+        iterations_num = int(self.POP_SIZE / self.env_batch_size)
+
+        communication_socket, address = server.accept()
+        print("after connect")
+        for i in range( iterations_num ):
+            print(f"incremented i {i}")
+            # training a batch of networks
+            
+            print(f"Connected to {address}")
+            message = communication_socket.recv(4096).decode('utf-8')
+            print(f"message from cliet is {message}")
+            communication_socket.send("message from server to client with corresponding actions".encode("utf-8"))
+            
+            # processing data and taking actions
+            # returning actions
+
+
+
 
     def main(self):
         
@@ -382,10 +414,16 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward.txt')
 
         self.start_envs()
-        self.run(config_path)
+        self.run(config_path, self.eval_genomes)
         #self.run_winner(config_path, "winner-generation 6")
 
         # self.random_actions()
+    
+    def main_unity(self):
+        local_dir = os.path.dirname(__file__)
+        config_path = os.path.join(local_dir, 'config-feedforward.txt')
+
+        self.run(config_path, self.eval_genomes_unity)
 
     def vis_winner(self):
         winner = "winner-generation 19"
@@ -396,7 +434,8 @@ class NeatClass(object):
         print(winner[1].fitness)
         visualize.draw_net(config, winner[1], True)
 
-    def run(self, config_file):
+
+    def run(self, config_file, eval_func):
         
         """
         runs the NEAT algorithm to train a neural network to play Age of war
@@ -409,16 +448,16 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
 
-        #p = neat.Population(config)
+        p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-17")
+        #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-17")
         p.add_reporter(neat.StdOutReporter(True))
  
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
         p.add_reporter(neat.Checkpointer(1))
 
-        winner = p.run(self.eval_genomes, 50)
+        winner = p.run(eval_func, 50)
 
         # with open('winner-feedforward', 'wb') as f:
         #     pickle.dump(winner, f)

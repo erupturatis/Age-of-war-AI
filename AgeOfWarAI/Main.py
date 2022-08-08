@@ -322,15 +322,19 @@ class Master(object):
         return inputs, False
         
 def run():
-    number_of_windows = 2
+    number_of_windows = 1
     difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
     neats.master = master
     neats.main()
 
+def run_unity():
+    neats = NeatClass()
+    neats.main_unity()
+
 if __name__ == "__main__":
-    run()
+    run_unity()
 
 
 

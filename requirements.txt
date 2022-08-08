@@ -1,0 +1,7 @@
+numpy
+paddlepaddle
+paddleocr
+pyautogui
+neat-python
+opencv-python
+scipy

@@ -1,6 +1,6 @@
 # Age-of-war-AI
 Age of war AI
-
+Running on python 3.7.9
 
 inputs:
 
