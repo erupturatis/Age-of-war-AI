@@ -8,7 +8,6 @@ from scipy.stats import stats
 import math
 import pyautogui
 #import visualize
-from age_of_war_numerical import Game
 import random
 
 
@@ -245,69 +244,6 @@ class NeatClass(object):
             pass
 
         self.generation += 1
-
-    def eval_genomes_numerical(self, genomes, config):
-        self.POP_SIZE = len(genomes)
-
-        evaluating = True
-        fitness = 0
-
-        time1 = time.time()
-
-        for g in genomes:
-
-            genome = g[1]
-            net = neat.nn.FeedForwardNetwork.create(genome, config) 
-            genome.fitness = 0
-            game = Game()
-
-            game.step()
-            inputs = game.get_inputs()
-
-            action = net.activate(inputs)
-            action = np.array(action)
-            action = stats.zscore(action)
-            action = self.softmax(action)
-            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-
-            action = choices(population, action)
-            Taken = game.take_action(*action)
-            game.debug()
-        
-        
-
-        mx = 0
-        cnt = 0
-        for i,g in enumerate(genomes):
-            genome = g[1]
-            fitness += genome.fitness
-            if genome.fitness > mx:
-                mx = genome.fitness
-                cnt = i
-        
-        self.fitness_med = (self.generation, fitness / len(genomes), mx)
-        # print(self.population.best_genome)
-        # print(self.population.best_genome[1])
-
-        try:
-            with open(f'winner-generation {self.generation}', 'wb') as f:
-                pickle.dump(genomes[cnt], f)
-        except:
-            pass
-        
-        try:
-            with open(f'fitness_scores{self.generation}.txt', 'w') as f:
-                f.write(f"{self.fitness_med}")
-            f.close()
-        except:
-            pass
-
-        self.generation += 1
-
-
-
-
-
     
     def run_winner(self, config_file, winner):
 
@@ -376,6 +312,41 @@ class NeatClass(object):
         
             self.master.save_all_data_packets()
 
+
+
+    def receive_message(self, communication_socket):
+   
+        s = communication_socket
+        full_msg = ''
+        new_msg = True
+        while True:
+       
+            msg = s.recv(4)
+         
+            if new_msg:
+                #print("new msg len:",msg)
+              
+                msg = msg.decode("utf-8")
+                bar = msg.find('.')
+                if bar != -1:
+                 
+                    msglen = int(msg[:bar])
+                else:
+                    msglen = int(msg)
+
+                new_msg = False
+            
+            try:
+                full_msg += msg.decode("utf-8")
+            except:
+                full_msg += msg
+                
+            if len(full_msg) == msglen:
+                break
+
+        full_msg = full_msg[full_msg.find('.')+1:]
+        return full_msg
+
     def eval_genomes_unity(self, genomes, config):
         print("got to eval unity")
         import socket
@@ -386,11 +357,21 @@ class NeatClass(object):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((HOST, PORT))
 
-        server.listen(100)
+        server.listen(1)
 
         self.POP_SIZE = len(genomes)
         iterations_num = int(self.POP_SIZE / self.env_batch_size)
 
+        self.networks = list()
+        self.genomes_list = list()
+
+        for g in genomes:
+            genome = g[1]
+            net = neat.nn.FeedForwardNetwork.create(genome, config)
+            self.networks.append(net) 
+            genome.fitness = 0
+            self.genomes_list.append(genome)
+      
         communication_socket, address = server.accept()
         print("after connect")
         for i in range( iterations_num ):
@@ -398,12 +379,51 @@ class NeatClass(object):
             # training a batch of networks
             
             print(f"Connected to {address}")
-            message = communication_socket.recv(4096).decode('utf-8')
-            print(f"message from cliet is {message}")
-            communication_socket.send("message from server to client with corresponding actions".encode("utf-8"))
+            iter = 0
+            finished_envs = 0
+            finished_arr = list()
+            for j in range(self.env_batch_size):
+                finished_arr.append(0)
+
+            print(f"STARTING THE {i} BATCH OF {self.env_batch_size} ENVIRONMENTS")
+            while finished_envs != self.env_batch_size :
+                # training until all envs int the batches are finished
+                
+                iter += 1
+                print(f"actions taken per batch {iter} with finished {finished_envs}")
+                for j in range(self.env_batch_size):
+                    # processing the network i*50 + j and j environment
+                    # receiving inputs
+                    message = self.receive_message(communication_socket)
+                    
+
+                    input = message.split(' ')
+                    status = int(input[0])
+               
+                    if status == 0 :
+                        # processing and sending actions
+                
+                        communication_socket.send(f"12".encode("utf-8"))
+                  
+                        # getting feedback on actions
+                      
+                        message = communication_socket.recv(16)
+                        
+                     
+                    
+                    else:
+                        if finished_arr[j] == 0:
+                            finished_arr[j] = 1
+                            finished_envs += 1
+                            if status == 2:
+                                pass
+                                #corrsponding genome gets 1k fitness
+                        communication_socket.send(f"0".encode("utf-8"))
+
+        print("GOT TO THE END OF THE FUNCTION")
+                
             
-            # processing data and taking actions
-            # returning actions
+            
 
 
 

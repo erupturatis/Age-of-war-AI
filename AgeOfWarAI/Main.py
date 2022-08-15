@@ -331,6 +331,7 @@ def run():
 
 def run_unity():
     neats = NeatClass()
+    neats.env_batch_size = 50
     neats.main_unity()
 
 if __name__ == "__main__":
