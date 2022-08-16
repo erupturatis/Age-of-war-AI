@@ -1,3 +1,4 @@
+from cmath import exp
 import neat
 import time
 import numpy as np
@@ -9,8 +10,7 @@ import math
 import pyautogui
 #import visualize
 import random
-
-
+from GLOBALS import GLOBAL_VALUES
 
 class NeatClass(object):
     envs = None
@@ -23,7 +23,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 24
+    generation = 0
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -42,7 +42,19 @@ class NeatClass(object):
         e_x = np.exp(x - np.max(x))
         return e_x / e_x.sum()
 
-    
+    def stable_sigmoid(self, x):
+        if type(x) == list:
+            x_new = [self.stable_sigmoid(i) for i in x]
+            return x_new
+        else:
+            if x >= 0:
+                z = math.exp(-x)
+                sig = 1 / (1 + z)
+                return sig
+            else:
+                z = math.exp(x)
+                sig = z / (1 + z)
+                return sig
 
     def random_actions(self):
         for i in range(100):
@@ -319,20 +331,33 @@ class NeatClass(object):
         s = communication_socket
         full_msg = ''
         new_msg = True
+        cp = False
+        #print("entr func")
         while True:
        
-            msg = s.recv(4)
+            msg = s.recv(100)
+            if(cp):
+                print(f"{msg} bcs of cp")
          
             if new_msg:
                 #print("new msg len:",msg)
               
                 msg = msg.decode("utf-8")
                 bar = msg.find('.')
-                if bar != -1:
-                 
+                try:
                     msglen = int(msg[:bar])
-                else:
-                    msglen = int(msg)
+                except:
+                    cp = True
+                    print("cplm are")
+                    if msg[0] == '1':
+                        msglen = 1
+                    else:
+                        msglen = 120
+                    print(msg)
+                    print(msglen)
+                    time.sleep(.25)
+                   
+                    #raise("problem")
 
                 new_msg = False
             
@@ -341,7 +366,10 @@ class NeatClass(object):
             except:
                 full_msg += msg
                 
-            if len(full_msg) == msglen:
+            if len(full_msg) >= msglen:
+                if cp:
+                    print(f"{msglen} len cp")
+                    print(f"{full_msg} full msg")
                 break
 
         full_msg = full_msg[full_msg.find('.')+1:]
@@ -365,6 +393,7 @@ class NeatClass(object):
         self.networks = list()
         self.genomes_list = list()
 
+        self.generation += 1
         for g in genomes:
             genome = g[1]
             net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -385,40 +414,128 @@ class NeatClass(object):
             for j in range(self.env_batch_size):
                 finished_arr.append(0)
 
-            print(f"STARTING THE {i} BATCH OF {self.env_batch_size} ENVIRONMENTS")
+            print(f"STARTING THE {i} BATCH OF {self.env_batch_size} ENVIRONMENTS OF GEN {self.generation}")
             while finished_envs != self.env_batch_size :
                 # training until all envs int the batches are finished
-                
+                time1 = time.time()
                 iter += 1
-                print(f"actions taken per batch {iter} with finished {finished_envs}")
+                #print(f"actions taken per batch {iter} with finished {finished_envs}")
+                message = self.receive_message(communication_socket)
+                finished = message.count('*')
+                message = message.split('|')
+                #print(len(message))
+                #print(message)
+                '''
+                '', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 ', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 
+0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 '
+
+                '''
+                message = message[1:]
+                
+                actions = ""
                 for j in range(self.env_batch_size):
                     # processing the network i*50 + j and j environment
-                    # receiving inputs
-                    message = self.receive_message(communication_socket)
+                    # processing inputs
+                    mess = message[j]
+                    mess = mess.split(' ')
+                    #print(mess)
+                    '''
+                    ['', '0', 'php', '1.000', 'ehp', '1.000', 'mn', '17500', 'xp', '999999', 'bp', '0.500', 'ab', '1', 'ptrps', '0', '0', '0', '0', '', 'etrps', '0', '0', '0', '0', '', 'slots', '1', 'age', '1', 'eage', '1', 'turrets', '0', '0', '0', '0', '0', '0', '0', '0', '']
+                    '''
+                    player_agen = int(mess[29])
+                    enemy_agen = int(mess[31])
+
+                    in_train = int(mess[1])
+                    player_health = float(mess[3])
+                    enemy_health = float(mess[5])
+
                     
 
-                    input = message.split(' ')
-                    status = int(input[0])
-               
-                    if status == 0 :
-                        # processing and sending actions
-                
-                        communication_socket.send(f"12".encode("utf-8"))
-                  
-                        # getting feedback on actions
-                      
-                        message = communication_socket.recv(16)
-                        
-                     
-                    
+                    money = int(mess[7])
+                    tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
+                    xp = int(mess[9])
+                    original_xp = xp
+                    divider =  GLOBAL_VALUES["experience"][player_agen-1]
+                    if divider == None:
+                        xp = 0
                     else:
-                        if finished_arr[j] == 0:
-                            finished_arr[j] = 1
-                            finished_envs += 1
-                            if status == 2:
-                                pass
-                                #corrsponding genome gets 1k fitness
-                        communication_socket.send(f"0".encode("utf-8"))
+                        xp = xp / divider
+                    battle_place = float(mess[11])
+                    ability = int(mess[13])
+                    player_troops_total = [int(mess[15]), int(mess[16]), int(mess[17]), int(mess[18])]
+                    enemy_troops_total = [int(mess[21]), int(mess[22]), int(mess[23]), int(mess[24])]
+                    slots_available = int(mess[27])
+                    turrets = [
+                        [int(mess[33]),int(mess[34])],
+                        [int(mess[35]),int(mess[36])],
+                        [int(mess[37]),int(mess[38])],
+                        [int(mess[39]),int(mess[40])],
+                    ]
+                    #processing data
+
+                    new_turrets = list()
+                    for turret in turrets:
+                        tier,turr_age = turret[0], turret[1]
+                        
+                        if turr_age != 0:
+                            sig_tier = self.stable_sigmoid(tier)
+                            new_turrets.append(sig_tier) # turret exists
+                            if turr_age == player_agen:
+                                new_turrets.append(1)
+                            else:
+                                new_turrets.append(-1)
+                        else:
+                            new_turrets.append(0)
+                            new_turrets.append(0)
+
+                    in_train = self.stable_sigmoid(in_train)
+                    player_troops_total = self.stable_sigmoid(player_troops_total)
+                    enemy_troops_total = self.stable_sigmoid(enemy_troops_total)
+                    slots_available = self.stable_sigmoid(slots_available)
+
+                    age = [0,0,0,0,0]
+                    age[player_agen-1] = 1
+
+                    enemy_age = [0,0,0,0,0]
+                    enemy_age[enemy_agen-1] = 1
+
+                    inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
+
+                    network_num = i * 50 + j
+                    self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
+
+                    net = self.networks[network_num]
+
+
+                    action = net.activate(inputs)
+                    action = np.array(action)
+                    action = stats.zscore(action)
+                    action = self.softmax(action)
+                    population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+
+                    if original_xp > 6500000 :
+                        # the ai hit a infinite loop so it will lose on purpose
+                        # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
+                        action[8] += 10
+                        action[9] += 10
+                        action[10] += 10
+                        action[11] += 10
+                        action[13] += 10
+                        
+                        
+                    action = np.argmax(action)
+                    actions += f"{action} "
+
+                time2 = time.time()
+                
+                 
+                #print(actions)
+                #print(time2-time1)
+                communication_socket.send(f"{actions}".encode("utf-8"))
+                #print(finished)
+                if finished == 50:
+                    break
+                   
 
         print("GOT TO THE END OF THE FUNCTION")
                 
@@ -477,7 +594,7 @@ class NeatClass(object):
         p.add_reporter(stats)
         p.add_reporter(neat.Checkpointer(1))
 
-        winner = p.run(eval_func, 50)
+        winner = p.run(eval_func, 500)
 
         # with open('winner-feedforward', 'wb') as f:
         #     pickle.dump(winner, f)
