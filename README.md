@@ -1,6 +1,6 @@
 # Age-of-war-AI
 Age of war AI
-
+Running on python 3.7.9
 
 inputs:
 
@@ -39,7 +39,7 @@ simplifications
 -enemy troops, player troops -> taking them as 2 percents 8 -> 2
 
 # if this doesn't work, reduce the cannon selling actions to 1 and buying cannon to 1
-14 actions
+15 actions
 use ability(1 action)
 
 Dependencies

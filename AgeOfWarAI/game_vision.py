@@ -2,8 +2,6 @@ import numpy as np
 import cv2
 import pyautogui
 from PIL import Image, ImageOps, ImageFilter
-from pytesseract import pytesseract
-from pytesseract import Output
 from utils import *
 import warnings
 from game_environment import Env

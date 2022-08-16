@@ -191,9 +191,6 @@ class Master(object):
 
             if env.age != 5:
                 player_troops_total.append(0)
-     
-                
-        
 
 
         if env.enemy_aged_recently > 0:
@@ -312,6 +309,8 @@ class Master(object):
        
         player_troops_total = self.stable_sigmoid(player_troops_total)
         enemy_troops_total = self.stable_sigmoid(enemy_troops_total)
+        #in_train = self.stable_sigmoid(in_train)
+        
 
         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
@@ -322,15 +321,20 @@ class Master(object):
         return inputs, False
         
 def run():
-    number_of_windows = 2
+    number_of_windows = 1
     difficulty = 1
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
     neats.master = master
     neats.main()
 
+def run_unity():
+    neats = NeatClass()
+    neats.env_batch_size = 50
+    neats.main_unity()
+
 if __name__ == "__main__":
-    run()
+    run_unity()
 
 
 
