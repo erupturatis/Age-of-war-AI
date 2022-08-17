@@ -1,4 +1,4 @@
-from cmath import exp
+from cmath import exp, isnan, nan
 import neat
 import time
 import numpy as np
@@ -376,7 +376,7 @@ class NeatClass(object):
         return full_msg
 
     def eval_genomes_unity(self, genomes, config):
-        print("got to eval unity")
+        #print("got to eval unity")
         import socket
 
         HOST = "192.168.100.11"
@@ -402,19 +402,19 @@ class NeatClass(object):
             self.genomes_list.append(genome)
       
         communication_socket, address = server.accept()
-        print("after connect")
+        #print("after connect")
         for i in range( iterations_num ):
-            print(f"incremented i {i}")
+            #print(f"incremented i {i}")
             # training a batch of networks
             
-            print(f"Connected to {address}")
+            #print(f"Connected to {address}")
             iter = 0
             finished_envs = 0
             finished_arr = list()
             for j in range(self.env_batch_size):
                 finished_arr.append(0)
 
-            print(f"STARTING THE {i} BATCH OF {self.env_batch_size} ENVIRONMENTS OF GEN {self.generation}")
+            #print(f"STARTING THE {i} BATCH OF {self.env_batch_size} ENVIRONMENTS OF GEN {self.generation}")
             while finished_envs != self.env_batch_size :
                 # training until all envs int the batches are finished
                 time1 = time.time()
@@ -522,8 +522,17 @@ class NeatClass(object):
                         action[11] += 10
                         action[13] += 10
                         
-                        
-                    action = np.argmax(action)
+                    
+                    val = action[np.argmax(action)]
+                    #action = np.argmax(action)
+                    
+           
+                    if np.isnan(val):
+                        action = 13
+                    else:
+                        action = choices(population, action)
+                        action = action[0]
+                 
                     actions += f"{action} "
 
                 time2 = time.time()
