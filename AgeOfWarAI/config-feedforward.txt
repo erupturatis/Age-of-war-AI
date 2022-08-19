@@ -2,14 +2,14 @@
 [NEAT]
 fitness_criterion     = max
 fitness_threshold     = 10000
-pop_size              = 150
+pop_size              = 100
 reset_on_extinction   = False
 
 [DefaultGenome]
 # node activation options
 activation_default      = relu
 activation_mutate_rate  = 0.01
-activation_options      = sigmoid
+activation_options      = tanh
 
 # node aggregation options
 aggregation_default     = sum
@@ -19,10 +19,10 @@ aggregation_options     = sum
 # node bias options
 bias_init_mean          = 0.0
 bias_init_stdev         = 1.0
-bias_max_value          = 30.0
-bias_min_value          = -30.0
-bias_mutate_power       = 2.093
-bias_mutate_rate        = 0.0509
+bias_max_value          = 5.0
+bias_min_value          = -5.0
+bias_mutate_power       = 1.093
+bias_mutate_rate        = 0.5
 bias_replace_rate       = 0.1
 
 # genome compatibility options
@@ -30,22 +30,22 @@ compatibility_disjoint_coefficient = 2.0
 compatibility_weight_coefficient   = 0.5
 
 # connection add/remove rates
-conn_add_prob           = 0.988
-conn_delete_prob        = 0.146
+conn_add_prob           = 0.3
+conn_delete_prob        = 0.3
 
 # connection enable options
 enabled_default         = True
 enabled_mutate_rate     = 0.01
 
 feed_forward            = True
-initial_connection      = unconnected
+initial_connection      = full_direct
 
 # node add/remove rates
 node_add_prob           = 0.25
 node_delete_prob        = 0.1
 
 # network parameters
-num_hidden              = 0
+num_hidden              = 10
 num_inputs              = 34
 num_outputs             = 15
 
@@ -61,14 +61,14 @@ response_replace_rate   = 0.0
 # connection weight options
 weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
-weight_max_value        = 30
-weight_min_value        = -30
-weight_mutate_power     = 0.825
+weight_max_value        = 6
+weight_min_value        = -2
+weight_mutate_power     = 0.125
 weight_mutate_rate      = 0.460
-weight_replace_rate     = 0.0245
+weight_replace_rate     = 0.1
 
 [DefaultSpeciesSet]
-compatibility_threshold = 4.5
+compatibility_threshold = 5.0
 
 [DefaultStagnation]
 species_fitness_func = mean
@@ -77,4 +77,4 @@ species_elitism      = 2
 
 [DefaultReproduction]
 elitism            = 2
-survival_threshold = 0.1
+survival_threshold = 0.2
