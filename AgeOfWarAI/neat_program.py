@@ -394,6 +394,11 @@ class NeatClass(object):
         communication_socket, address = self.server.accept()
         self.communication_socket = communication_socket
 
+
+    
+        
+
+
     def run_winner_unity(self, config_file, winner):
         #print("got to eval unity")
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -565,7 +570,6 @@ class NeatClass(object):
             if finished == 50:
                 break
                    
-        self.save_best(genomes)
         self.generation += 1
         return reset_hist
     
@@ -618,7 +622,7 @@ class NeatClass(object):
                     actions = ""
 
                     for j in range(self.env_batch_size):
-                        # processing the network i*50 + j and j environment
+                        # processing the network i* self.env_batch_size + j and j environment
                         # processing inputs
                         mess = message[j] 
                         inp = False
@@ -630,8 +634,9 @@ class NeatClass(object):
                         if finished < 47:
                             inp = False
                         if inp:
+                            print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
-                            #print(f"ENVIRONMENT IS {i * 50 + j}")
+                            
                         
                         mess = mess.split(' ')
                         #print(mess)
@@ -698,7 +703,8 @@ class NeatClass(object):
 
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
                 
-                        network_num = i * 50 + j
+                        network_num = i * self.env_batch_size + j
+                        network_num = 27
 
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
@@ -753,7 +759,7 @@ class NeatClass(object):
                     #print(time2-time1)
                     self.communication_socket.send(f"{actions}".encode("utf-8"))
                     #print(finished)
-                    if finished == 50:
+                    if finished == self.env_batch_size:
                         break
 
         for i,g in enumerate(genomes):
@@ -769,8 +775,12 @@ class NeatClass(object):
                 
             
             
-
-
+    def save_genome_from_generation(self, population, number, config_name):
+        from neat.six_util import iteritems
+        genomes = list(iteritems(self.population))
+        local_dir = os.path.dirname(__file__)
+        config_path = os.path.join(local_dir, f'{config_name}')
+        
 
 
     def main(self):
@@ -789,8 +799,8 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward.txt')
 
         self.establish_connection()
-        self.run(config_path, self.eval_genomes_unity)
-        #self.run_winner_unity(config_path, "winner-generation 4")
+        #self.run(config_path, self.eval_genomes_unity)
+        self.run_winner_unity(config_path, "winner-generation 150")
 
     def vis_winner(self):
         winner = "winner-generation 19"
@@ -815,9 +825,9 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
 
-        p = neat.Population(config)
+        #p = neat.Population(config)
 
-        #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-3")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-149")
         #print("returned ccheck")
         p.add_reporter(neat.StdOutReporter(True))
         
