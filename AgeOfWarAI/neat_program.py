@@ -5,7 +5,6 @@ import os
 import pickle
 from random import choices
 from scipy.stats import stats
-import math
 import pyautogui
 import visualize
 from age_of_war_numerical import Game
@@ -24,7 +23,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 24
+    generation = 46
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -180,7 +179,8 @@ class NeatClass(object):
                 action = self.softmax(action)
                 population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
-                 if env.xp > 6500000 :
+                action = choices(population, action)
+                if env.xp > 6500000 :
                     # the ai hit a infinite loop so it will lose on purpose
                     # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
                     action[8] += 10
@@ -189,9 +189,6 @@ class NeatClass(object):
                     action[11] += 10
                     action[13] += 10
                     action = random.randint(8,11)
-                    
-                action = choices(population, action)
-               
 
                 self.act += 1
                 if action[0] == 13:
@@ -411,14 +408,14 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-17")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-39")
         p.add_reporter(neat.StdOutReporter(True))
  
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
         p.add_reporter(neat.Checkpointer(1))
 
-        winner = p.run(self.eval_genomes, 50)
+        winner = p.run(self.eval_genomes, 100)
 
         # with open('winner-feedforward', 'wb') as f:
         #     pickle.dump(winner, f)

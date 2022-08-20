@@ -6,8 +6,7 @@ from time import time
 from GLOBALS import GLOBAL_VALUES
 import time
 import os
-from paddleocr import PaddleOCR,draw_ocr
-import logging
+from paddleocr import PaddleOCR
 import math
 # about 0.25 seconds per screenshot
 # 4 windows would mean an action per second which should be enough
@@ -323,7 +322,7 @@ class Master(object):
         
 def run():
     number_of_windows = 2
-    difficulty = 1
+    difficulty = 3
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
     neats.master = master
