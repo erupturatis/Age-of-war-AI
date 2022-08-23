@@ -1,0 +1,39 @@
+(0, 36.27866666666669, 213.19999999999644, 69)
+
+1.6 13
+1.7 39
+
+stochastic for all
+
+in_train = np.array(in_train)/5
+player_troops_total = np.array(player_troops_total)/5
+enemy_troops_total = np.array(enemy_troops_total)/5
+
+# in_train = np.tanh(in_train)
+# player_troops_total = np.tanh(player_troops_total)
+# enemy_troops_total = np.tanh(enemy_troops_total)
+# slots_available = np.tanh(slots_available)
+
+age = [0,0,0,0,0]
+age[player_agen-1] = 1
+
+enemy_age = [0,0,0,0,0]
+enemy_age[enemy_agen-1] = 1
+tot_tr = np.sum(player_troops_total)
+
+
+money = money + 1
+money = np.log(min(money, 50))
+xp = np.log(min(xp + 1, 20))
+
+action1 = action[0:5] # troop actions
+action2 = action[5:13] # turret actions
+action3 = action[13:15] # buy slot or not
+action4 = action[15:17] # ability or not
+action5 = action[17:19] # upgrade age or not
+
+action1 = self.sample_action(action1)
+action2 = self.sample_action(action2)
+action3 = self.sample_action(action3)
+action4 = self.sample_action(action4)
+action5 = self.sample_action(action5)
