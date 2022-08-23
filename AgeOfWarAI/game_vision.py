@@ -122,6 +122,7 @@ class GameVision(object):
 
 
     def scan_money_and_xp(self, env = None):
+     
         if env == None:
             class Dummy(object):
                 money = 175
@@ -138,10 +139,10 @@ class GameVision(object):
         if len(result) == 0:
             raise("Game Paused") 
 
-        img = cv2.resize(img, (img.shape[1]*4,img.shape[0]*4) )
+        img = cv2.resize(img, (img.shape[1],img.shape[0]) )
         ocr = self.ocr
        
-
+       
         result = ocr.ocr(img, cls=True)
 
         txts = [line[1][0] for line in result]
@@ -186,7 +187,7 @@ class GameVision(object):
         except:
             money_finale = self.env.money
             xp_finale = self.env.xp
-        
+
         return money_finale, xp_finale
 
     
