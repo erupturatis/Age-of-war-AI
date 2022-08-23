@@ -271,6 +271,50 @@ class Env(object):
             [0,0]
         ]
 
+    def actions_manager(self, action1, action2, action3, action4, action5):
+        if action1 == 0:
+            self.take_action(13)
+        elif action1 == 4:
+            self.take_action(0)
+        elif action1 == 1:
+            self.take_action(1)
+        elif action1 == 2:
+            self.take_action(2)
+        elif action1 == 3:
+            self.take_action(3)
+
+        if action2 == 0:
+            self.take_action(13)
+        elif action2 == 7:
+            self.take_action(5)
+        elif action2 == 1:
+            self.take_action(6)
+        elif action2 == 2:
+            self.take_action(7)
+        elif action2 == 3:
+            self.take_action(8)
+        elif action2 == 4:
+            self.take_action(9)
+        elif action2 == 5:
+            self.take_action(10)
+        elif action2 == 6:
+            self.take_action(11)
+        
+        if action3 == 0:
+            self.take_action(13)
+        elif action3 == 1:
+            self.take_action(4)
+        
+        if action4 == 0:
+            self.take_action(13)
+        elif action4 == 1:
+            self.take_action(14)
+
+        if action5 == 0:
+            self.take_action(13)
+        elif action5 == 1:
+            self.take_action(12)
+
     def take_action(self, action):
         action = self.ACTIONS[action]
         if self.printing:

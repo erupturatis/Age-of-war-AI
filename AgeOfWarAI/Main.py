@@ -304,12 +304,15 @@ class Master(object):
         else:
             ability = 0
 
-        total_troops = np.sum(player_troops_total)
+        #slots_available = np.tanh(slots_available)
 
-        in_train = np.tanh(in_train)
-        player_troops_total = np.tanh(player_troops_total)
-        enemy_troops_total = np.tanh(enemy_troops_total)
-        slots_available = np.tanh(slots_available)
+        in_train = np.array(in_train)/5
+        player_troops_total = np.array(player_troops_total)/5
+        enemy_troops_total = np.array(enemy_troops_total)/5
+
+        money = money + 1
+        money = np.log(min(money, 50))
+        xp = np.log(min(xp + 1, 20))
 
         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
@@ -317,11 +320,11 @@ class Master(object):
         # if self.scans % 25 == 0:
         #     self.save_data_packets(window_num)
         self.scans += 1
-        return inputs, False, total_troops
+        return inputs, False
         
 def run():
     number_of_windows = 1
-    difficulty = 1
+    difficulty = 2
     
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)

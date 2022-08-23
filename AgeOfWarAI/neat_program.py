@@ -260,7 +260,7 @@ class NeatClass(object):
             env = self.envs[0]
             env.focus()
             env.printing = True
-            inputs, ended, total = env.get_inputs()
+            inputs, ended = env.get_inputs()
       
             if ended:
                 if inputs == True:
@@ -276,20 +276,23 @@ class NeatClass(object):
 
             action = net.activate(inputs)
             action = np.array(action)
-            self.master.data[env.assigned_window].append(action)
+            print(action)
 
-            action = stats.zscore(action)
-            action = self.softmax(action)
+            action1 = action[0:5] # troop actions
+            action2 = action[5:13] # turret actions
+            action3 = action[13:15] # buy slot or not
+            action4 = action[15:17] # ability or not
+            action5 = action[17:19] # upgrade age or not
 
-            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-            action = choices(population, action)
+            action1 = np.argmax(action1)
+            action2 = np.argmax(action2)
+            action3 = np.argmax(action3)
+            action4 = np.argmax(action4)
+            action5 = np.argmax(action5)
             
-
             self.act += 1
-            if total > 6 and action[0] <= 3:
-                Taken = False
-            else:
-                Taken = env.take_action(*action)
+      
+            Taken = env.actions_manager(action1,action2,action3,action4,action5)
             print(Taken)
             print(f"TOTAL TIME {time.time() - time1}")
 
@@ -1181,11 +1184,11 @@ class NeatClass(object):
     def main(self):
         
         local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward.txt')
+        config_path = os.path.join(local_dir, 'config-feedforward split2.txt')
 
         self.start_envs()
         #self.run(config_path, self.eval_genomes)
-        self.run_winner(config_path, "best")
+        self.run_winner(config_path, "wn11")
 
         # self.random_actions()
     
@@ -1195,7 +1198,7 @@ class NeatClass(object):
 
         self.establish_connection()
         self.run(config_path, self.eval_genomes_unity)
-        #self.run_winner_unity(config_path, "winner-generation 150")
+        self.run_winner_unity(config_path, "winner-generation 150")
     
     def main_unity_split(self):
         local_dir = os.path.dirname(__file__)
