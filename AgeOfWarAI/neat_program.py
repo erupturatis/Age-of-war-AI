@@ -472,16 +472,26 @@ class NeatClass(object):
                         new_turrets.append(0)
                         new_turrets.append(0)
 
-                in_train = np.tanh(in_train)
-                player_troops_total = np.tanh(player_troops_total)
-                enemy_troops_total = np.tanh(enemy_troops_total)
-                slots_available = np.tanh(slots_available)
+                in_train = np.array(in_train)/5
+                player_troops_total = np.array(player_troops_total)/5
+                enemy_troops_total = np.array(enemy_troops_total)/5
+
+                # in_train = np.tanh(in_train)
+                # player_troops_total = np.tanh(player_troops_total)
+                # enemy_troops_total = np.tanh(enemy_troops_total)
+                # slots_available = np.tanh(slots_available)
 
                 age = [0,0,0,0,0]
                 age[player_agen-1] = 1
 
                 enemy_age = [0,0,0,0,0]
                 enemy_age[enemy_agen-1] = 1
+                tot_tr = np.sum(player_troops_total)
+
+
+                money = money + 1
+                money = np.log(min(money, 50))
+                xp = np.log(min(xp + 1, 20))
 
                 inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         
@@ -512,6 +522,7 @@ class NeatClass(object):
                 action3 = np.argmax(action3)
                 action4 = np.argmax(action4)
                 action5 = np.argmax(action5)
+                
                 # population = [0,1,2,3]
                 # action3 = stats.zscore(action3)
                 # action3 = self.softmax(action3)
@@ -782,7 +793,7 @@ class NeatClass(object):
                         
                         if finished < 47:
                             inp = False
-                        inp = False
+                        
                         if inp:
                             print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
@@ -867,7 +878,7 @@ class NeatClass(object):
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
                  
                         network_num = i * self.env_batch_size + j
-                        #network_num = 3
+                        
 
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
@@ -890,17 +901,17 @@ class NeatClass(object):
                         action4 = action[15:17] # ability or not
                         action5 = action[17:19] # upgrade age or not
     
-                        # action1 = np.argmax(action1)
-                        # action2 = np.argmax(action2)
-                        # action3 = np.argmax(action3)
-                        # action4 = np.argmax(action4)
-                        # action5 = np.argmax(action5)
-
                         action1 = np.argmax(action1)
-                        action2 = self.sample_action(action2)
+                        action2 = np.argmax(action2)
                         action3 = np.argmax(action3)
                         action4 = np.argmax(action4)
                         action5 = np.argmax(action5)
+
+                        # action1 = self.sample_action(action1)
+                        # action2 = self.sample_action(action2)
+                        # action3 = self.sample_action(action3)
+                        # action4 = self.sample_action(action4)
+                        # action5 = self.sample_action(action5)
 
                         if original_xp > 5000000 :
                             # the ai hit a infinite loop so it will lose on purpose
@@ -1191,8 +1202,8 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward split2.txt')
 
         self.establish_connection()
-        self.run(config_path, self.eval_genomes_unity_split_actions)
-        #self.run_winner_unity_split(config_path, "winner-generation 23")
+        #self.run(config_path, self.eval_genomes_unity_split_actions)
+        self.run_winner_unity_split(config_path, "wn86")
         
 
     def vis_winner(self):
@@ -1218,9 +1229,9 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
 
-        p = neat.Population(config)
+        #p = neat.Population(config)
 
-        #p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-21")
+        p = neat.Checkpointer.restore_checkpoint("n10arg")
      
         p.add_reporter(neat.StdOutReporter(True))
         
