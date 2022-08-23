@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 0
+    generation = 10
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -503,6 +503,7 @@ class NeatClass(object):
                 #net = self.networks[network_num]
                 action = net.activate(inputs)
                 action = np.array(action)
+           
 
                 action1 = action[0:5] # troop actions
                 action2 = action[5:13] # turret actions
@@ -796,7 +797,7 @@ class NeatClass(object):
                         
                         if finished < 47:
                             inp = False
-                        
+                        inp = False
                         if inp:
                             print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
@@ -819,6 +820,8 @@ class NeatClass(object):
 
                         money = int(mess[7])
                         tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
+                        saved_money = money / GLOBAL_VALUES["troops"][enemy_agen]["tier3"]
+                        money_val = money
                         money = money / tier3_cost
                         xp = int(mess[9])
                         original_xp = xp
@@ -883,8 +886,8 @@ class NeatClass(object):
                         network_num = i * self.env_batch_size + j
                         
 
-                        if add_fitness:
-                            self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
+                        
+
                             #print(f"{network_num} fitness being {self.genomes_list[network_num].fitness}")
 
                         net = self.networks[network_num]
@@ -892,7 +895,8 @@ class NeatClass(object):
                         if not add_fitness:
                             if finished_arr[j] == 0 :
                                 if status == 2:
-                                    self.genomes_list[network_num].fitness += 10000
+                                    self.genomes_list[network_num].fitness += 5000
+                                    print("AI WON THE GAME")
                                 finished_arr[j] = 1
 
                         action = net.activate(inputs)
@@ -910,6 +914,24 @@ class NeatClass(object):
                         action4 = np.argmax(action4)
                         action5 = np.argmax(action5)
 
+                        if add_fitness:
+                            self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
+                            self.genomes_list[network_num].fitness += 0.1 * np.tanh(saved_money/5) # reward to incentivize stacking money
+                            if enemy_agen == 5:
+                                self.genomes_list[network_num].fitness += 0.075 * np.tanh((money_val/2)/GLOBAL_VALUES["troops"][enemy_agen]["tier4"]) # reward to incentivize stacking money
+                            self.genomes_list[network_num].fitness -= 0.05 * np.tanh(tot_tr/2) # reduce the spamming 
+                            if action1 == 0:
+                                self.genomes_list[network_num].fitness += 0.01
+                            if action2 == 0:
+                                self.genomes_list[network_num].fitness += 0.01
+                            if action3 == 0:
+                                self.genomes_list[network_num].fitness += 0.01
+                            if action4 == 0:
+                                self.genomes_list[network_num].fitness += 0.01
+                            if action5 == 0:
+                                self.genomes_list[network_num].fitness += 0.01
+                                
+
                         # action1 = self.sample_action(action1)
                         # action2 = self.sample_action(action2)
                         # action3 = self.sample_action(action3)
@@ -924,7 +946,7 @@ class NeatClass(object):
                             action3 = 0
                             action2 = random.choices([3,4,5,6],[1,1,1,1])[0]
                             action1 = 0
-                            reset_hist = True
+                            #reset_hist = True
 
                         
 
@@ -1205,8 +1227,8 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward split2.txt')
 
         self.establish_connection()
-        #self.run(config_path, self.eval_genomes_unity_split_actions)
-        self.run_winner_unity_split(config_path, "wn86")
+        self.run(config_path, self.eval_genomes_unity_split_actions)
+        #self.run_winner_unity_split(config_path, "wn11")
         
 
     def vis_winner(self):
