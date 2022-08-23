@@ -1,5 +1,4 @@
-from audioop import add
-from cmath import exp, isnan, nan
+
 import neat
 import time
 import numpy as np
@@ -252,7 +251,7 @@ class NeatClass(object):
         valid_actions_streak = 0
         interations = 0
         while evaluating:
-        
+            time1 = time.time()
             interations += 1
 
             # if interations % 10 == 0:
@@ -261,7 +260,7 @@ class NeatClass(object):
             env = self.envs[0]
             env.focus()
             env.printing = True
-            inputs, ended = env.get_inputs()
+            inputs, ended, total = env.get_inputs()
       
             if ended:
                 if inputs == True:
@@ -287,14 +286,18 @@ class NeatClass(object):
             
 
             self.act += 1
-            
-            Taken = env.take_action(*action)
+            if total > 6 and action[0] <= 3:
+                Taken = False
+            else:
+                Taken = env.take_action(*action)
+            print(Taken)
+            print(f"TOTAL TIME {time.time() - time1}")
 
             if Taken == True:
                 valid_actions_streak += 1
                 if valid_actions_streak > 4:
                     valid_actions_streak = 4
-                local_fitness += 0.05 * valid_actions_streak
+                local_fitness += 0.00 * valid_actions_streak
                 # bonus for taking a valid action
             else:
                 valid_actions_streak = 0
@@ -1203,8 +1206,8 @@ class NeatClass(object):
         config_path = os.path.join(local_dir, 'config-feedforward.txt')
 
         self.start_envs()
-        self.run(config_path, self.eval_genomes)
-        self.run_winner(config_path, "winner-generation 6")
+        #self.run(config_path, self.eval_genomes)
+        self.run_winner(config_path, "best")
 
         # self.random_actions()
     

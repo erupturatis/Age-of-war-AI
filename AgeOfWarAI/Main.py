@@ -6,8 +6,7 @@ from time import time
 from GLOBALS import GLOBAL_VALUES
 import time
 import os
-from paddleocr import PaddleOCR,draw_ocr
-import logging
+from paddleocr import PaddleOCR
 import math
 # about 0.25 seconds per screenshot
 # 4 windows would mean an action per second which should be enough
@@ -107,29 +106,26 @@ class Master(object):
 
     def data_for_window(self, window_num):
         # screenshot included in data flow
+        
         env = self.envs[window_num]
-        pyautogui.moveTo(500,500) # recentering screen
-        if env.check_ability_time() < 6.5 :
-            time.sleep(.25)
-        else:
-            time.sleep(.1)
-
+        
         screenshot = self.wm.screenshot()
         self.screenshots[window_num] = screenshot
         
         gm = self.gms[window_num] 
         gm.screenshot = self.screenshots[window_num]
         gm.ocr = self.ocr
+       
+        
+        ended = gm.check_if_ended() # can be cut down when visualizing winner
         
         
-        ended = gm.check_if_ended()
-
         if ended:
             victory = gm.check_victory()
             return victory, True
 
-  
-
+        
+        
         if env.check_ability_time() > 6.5 :
             player_age_index = gm.scan_age(flip = False)
             in_train = gm.scan_training()
@@ -147,6 +143,7 @@ class Master(object):
             enemy_age_index = env.enemy_age
 
         money, xp = gm.scan_money_and_xp(env) 
+        
         ability = env.check_ability_avalability()
 
         Error = gm.scan_cancel()
@@ -306,11 +303,13 @@ class Master(object):
             ability = 1
         else:
             ability = 0
-       
-        player_troops_total = self.stable_sigmoid(player_troops_total)
-        enemy_troops_total = self.stable_sigmoid(enemy_troops_total)
-        #in_train = self.stable_sigmoid(in_train)
-        
+
+        total_troops = np.sum(player_troops_total)
+
+        in_train = np.tanh(in_train)
+        player_troops_total = np.tanh(player_troops_total)
+        enemy_troops_total = np.tanh(enemy_troops_total)
+        slots_available = np.tanh(slots_available)
 
         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
@@ -318,11 +317,12 @@ class Master(object):
         # if self.scans % 25 == 0:
         #     self.save_data_packets(window_num)
         self.scans += 1
-        return inputs, False
+        return inputs, False, total_troops
         
 def run():
     number_of_windows = 1
     difficulty = 1
+    
     master = Master(number_of_windows, difficulty)
     neats = NeatClass(master.envs)
     neats.master = master
@@ -335,6 +335,6 @@ def run_unity():
     neats.main_unity_split()
 
 if __name__ == "__main__":
-    run_unity()
+    run()
 
 

@@ -54,8 +54,7 @@ class Env(object):
         
     def go_back(self):
         pos = self.MOUSE_VALUES['back']
-        pg.moveTo(*pos)
-        pg.click()
+        self.move_and_click(pos, .2)
 
     def revert_turret_buying(self):
         if self.prev_money != -1:
@@ -76,8 +75,7 @@ class Env(object):
             return False
         if self.xp >= cost:
             pos = self.MOUSE_VALUES['evolve']
-            pg.moveTo(*pos)
-            pg.click()
+            self.move_and_click(pos, .1)
             self.player_aged_recently = 5
             self.age += 1
             return True
@@ -85,19 +83,17 @@ class Env(object):
         
     def access_troops(self):
         pos = self.MOUSE_VALUES['train_units']
-        pg.moveTo(*pos)
-        pg.click()
+        self.move_and_click(pos, .1)
 
     def spawn_troop(self, tier):
-
+        
         if self.money >= self.TROOPS_COST[self.age][f'tier{tier}']:
             self.costly_action_taken = 1
             self.access_troops()
            # print("troops accesed")
             self.money -= self.TROOPS_COST[self.age][f'tier{tier}']
             pos = self.MOUSE_VALUES[f'tier{tier}']
-            pg.moveTo(*pos)
-            pg.click()
+            self.move_and_click(pos, .1)
             #print("clicked")
             self.go_back()
             return True
@@ -119,8 +115,7 @@ class Env(object):
 
     def access_turret(self):
         pos = self.MOUSE_VALUES['get_turret']
-        pg.moveTo(*pos)
-        pg.click()
+        self.move_and_click(pos, .1)
 
     def spawn_turret(self, tier, aux = False):
 
@@ -130,8 +125,8 @@ class Env(object):
             self.costly_action_taken = 1
             self.money -= self.TURRETS_COST[self.age][f'tier{tier}']
             pos = self.MOUSE_VALUES[f'tier{tier}']
-            pg.moveTo(*pos)
-            pg.click()
+           
+            self.move_and_click(pos, .1)
             slot = None
             
             for i,x in enumerate(self.slots):
@@ -139,8 +134,8 @@ class Env(object):
                     slot = i
                     break
             pos = self.MOUSE_VALUES[f'turret_spot{i}']
-            pg.moveTo(*pos)
-            pg.click()
+           
+            self.move_and_click(pos, .1)
 
             self.slots[slot] = 1
 
@@ -185,13 +180,16 @@ class Env(object):
     def spawn_turret3(self):
         return self.spawn_turret(3)
     
+    def move_and_click(self, pos, sleep):
+        pg.moveTo(*pos)
+        time.sleep(sleep)
+        pg.click()
 
     def use_ability(self):
         if self.check_ability_avalability():
             self.ability_used = time.time()
             pos = self.MOUSE_VALUES['special']
-            pg.moveTo(*pos)
-            pg.click()
+            self.move_and_click(pos, .2)
             return True
         return False
 
@@ -217,8 +215,7 @@ class Env(object):
             self.prev_money = self.money
             self.money -= GLOBAL_VALUES["turret_slots"][self.total_slots-1]
             pos = self.MOUSE_VALUES['buy_spot']
-            pg.moveTo(*pos)
-            pg.click()
+            self.move_and_click(pos, .1)
             self.available_slots += 1
             self.total_slots += 1
             self.slots [self.total_slots-1] = 0
@@ -227,16 +224,13 @@ class Env(object):
 
     def sell_turret_activate(self):
         pos = self.MOUSE_VALUES['sell_turret']
-        pg.moveTo(*pos)
-        pg.click()
+        self.move_and_click(pos, .1)
 
     def sell_turretn(self, number = 0):
         if self.slots[number] == 1:
             self.sell_turret_activate()
             pos = self.MOUSE_VALUES[f'turret_spot{number}']
-            # print(f"selling turret on slot {number}")
-            pg.moveTo(*pos)
-            pg.click()
+            self.move_and_click(pos, .1)
             self.money += self.TURRETS_COST[self.turrets[number][1]][f'tier{self.turrets[number][0]}']
             self.turrets[number] = [0,0]
             self.slots[number] = 0
@@ -328,12 +322,12 @@ class Env(object):
     def start_game(self):
         #print("starting game")
         self.reset_everything()
-        pg.moveTo(*GLOBAL_VALUES["play"])
-        pg.click()
+       
+        self.move_and_click(GLOBAL_VALUES["play"], 0.3)
         #print("moved to play")
         difficulty = self.difficulty
-        pg.moveTo(*GLOBAL_VALUES[f"diff{difficulty}"])
-        pg.click()
+      
+        self.move_and_click(GLOBAL_VALUES[f"diff{difficulty}"], 0.3)
 
     def restart_game(self):
         self.reset_everything()
