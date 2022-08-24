@@ -284,11 +284,17 @@ class NeatClass(object):
             action4 = action[15:17] # ability or not
             action5 = action[17:19] # upgrade age or not
 
-            action1 = np.argmax(action1)
-            action2 = np.argmax(action2)
-            action3 = np.argmax(action3)
-            action4 = np.argmax(action4)
-            action5 = np.argmax(action5)
+            # action1 = np.argmax(action1)
+            # action2 = np.argmax(action2)
+            # action3 = np.argmax(action3)
+            # action4 = np.argmax(action4)
+            # action5 = np.argmax(action5)
+
+            action1 = self.sample_action(action1)
+            action2 = self.sample_action(action2)
+            action3 = self.sample_action(action3)
+            action4 = self.sample_action(action4)
+            action5 = self.sample_action(action5)
             
             self.act += 1
       
@@ -1210,7 +1216,7 @@ class NeatClass(object):
 
         self.start_envs()
         #self.run(config_path, self.eval_genomes)
-        self.run_winner(config_path, "wn11")
+        self.run_winner(config_path, "wn38")
 
         # self.random_actions()
     
