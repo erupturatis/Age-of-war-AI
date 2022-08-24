@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 10
+    generation = 88
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -803,14 +803,16 @@ class NeatClass(object):
                         
                         if finished < 47:
                             inp = False
-                        inp = False
+                        #inp = False
                         if inp:
                             print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
                             
                         
                         mess = mess.split(' ')
-                        status = mess[-1]
+                       
+                        status = int(mess[-1])
+                        
                         #print(mess)
                         '''
                         ['', '0', 'php', '1.000', 'ehp', '1.000', 'mn', '17500', 'xp', '999999', 'bp', '0.500', 'ab', '1', 'ptrps', '0', '0', '0', '0', '', 'etrps', '0', '0', '0', '0', '', 'slots', '1', 'age', '1', 'eage', '1', 'turrets', '0', '0', '0', '0', '0', '0', '0', '0', '']
@@ -890,6 +892,7 @@ class NeatClass(object):
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
                  
                         network_num = i * self.env_batch_size + j
+                        network_num = 127
                         
 
                         
@@ -923,9 +926,9 @@ class NeatClass(object):
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
                             self.genomes_list[network_num].fitness += 0.1 * np.tanh(saved_money/5) # reward to incentivize stacking money
-                            if enemy_agen == 5:
-                                self.genomes_list[network_num].fitness += 0.075 * np.tanh((money_val/2)/GLOBAL_VALUES["troops"][enemy_agen]["tier4"]) # reward to incentivize stacking money
+                            self.genomes_list[network_num].fitness += 0.3 * np.tanh((money_val/4)/GLOBAL_VALUES["troops"][5]["tier4"]) # reward to incentivize stacking money
                             self.genomes_list[network_num].fitness -= 0.05 * np.tanh(tot_tr/2) # reduce the spamming 
+
                             if action1 == 0:
                                 self.genomes_list[network_num].fitness += 0.01
                             if action2 == 0:
@@ -1262,7 +1265,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("n10arg")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-67")
      
         p.add_reporter(neat.StdOutReporter(True))
         
