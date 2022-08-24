@@ -335,6 +335,6 @@ def run_unity():
     neats.main_unity_split()
 
 if __name__ == "__main__":
-    run()
+    run_unity()
 
 
