@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 7
+    generation = 116
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -754,8 +754,10 @@ class NeatClass(object):
         
         #print("after connect")
         confidence_training = 1
+        cnt_win = 0
         for p in range (confidence_training):
             # running the same generation more times to account for the stochasticity
+            
             for i in range( iterations_num ):
                 # training a batch of networks of 50
                 iter = 0
@@ -794,7 +796,7 @@ class NeatClass(object):
                         
                         if finished < 45:
                             inp = False
-                        #inp = False
+                        inp = False
                         if inp:
                             print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
@@ -893,7 +895,7 @@ class NeatClass(object):
                         network_num = i * self.env_batch_size + j
 
                             #print(f"{network_num} fitness being {self.genomes_list[network_num].fitness}")
-                        network_num = 92
+            
                         net = self.networks[network_num]
 
                         if not add_fitness:
@@ -901,6 +903,8 @@ class NeatClass(object):
                                 if status == 2:
                                     self.genomes_list[network_num].fitness += 10000
                                     print("AI WON THE GAME")
+                                elif original_xp > 5000000:
+                                    cnt_win += 1
                                 finished_arr[j] = 1
 
                         action = net.activate(inputs)
@@ -930,7 +934,7 @@ class NeatClass(object):
                                 self.genomes_list[network_num].fitness += 0.5
 
                             if t4_troops > 0:
-                                self.genomes_list[network_num].fitness += 0.5 * (10**min(t4_troops,3))
+                                self.genomes_list[network_num].fitness += 0.2 * (10**t4_troops)
                                 
 
                         # action1 = self.sample_action(action1)
@@ -939,7 +943,7 @@ class NeatClass(object):
                         # action4 = self.sample_action(action4)
                         # action5 = self.sample_action(action5)
 
-                        if original_xp > 3500000 :
+                        if original_xp > 5000000 :
                             # the ai hit a infinite loop so it will lose on purpose
                             # just waiting 
                             action5 = 0
@@ -973,6 +977,14 @@ class NeatClass(object):
 
         self.save_best(genomes)
         self.generation += 1
+
+        if self.generation == 116 :
+            reset_hist = True
+        
+        if cnt_win >= 3:
+            print(f"A NUMBER OF {cnt_win} AI WON")
+            reset_hist = True
+
         return reset_hist
 
 
@@ -1257,7 +1269,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-75")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-115")
      
         p.add_reporter(neat.StdOutReporter(True))
         
