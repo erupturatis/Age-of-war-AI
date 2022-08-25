@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 88
+    generation = 7
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -792,7 +792,7 @@ class NeatClass(object):
                             add_fitness = True
                        
                         
-                        if finished < 47:
+                        if finished < 45:
                             inp = False
                         #inp = False
                         if inp:
@@ -826,7 +826,7 @@ class NeatClass(object):
                         original_xp = xp
                         divider =  GLOBAL_VALUES["experience"][player_agen-1]
                         if divider == None:
-                            xp = 0
+                            xp = xp/ 200000
                         else:
                             xp = xp / divider
                         battle_place = float(mess[11])
@@ -859,8 +859,13 @@ class NeatClass(object):
 
                         
                         in_train = np.array(in_train)/5
-                        player_troops_total = np.array(player_troops_total)/5
-                        enemy_troops_total = np.array(enemy_troops_total)/5
+                        t4_troops = player_troops_total[3]
+
+                        player_troops_total = np.array(player_troops_total)/5.0
+                        enemy_troops_total = np.array(enemy_troops_total)/5.0
+
+                        player_troops_total = np.sum(player_troops_total)
+                        enemy_troops_total = np.sum(enemy_troops_total)
 
                         # in_train = np.tanh(in_train)
                         # player_troops_total = np.tanh(player_troops_total)
@@ -878,24 +883,23 @@ class NeatClass(object):
                         money = money + 1
                         money = np.log(min(money, 50))
                         xp = np.log(min(xp + 1, 20))
+
+
+                        battle_place = battle_place * 5
                      
                         
-                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
-                 
+                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, slots_available, *age, *enemy_age, *new_turrets)
+                        #print(inputs)
                         network_num = i * self.env_batch_size + j
-                        network_num = 127
-                        
-
-                        
 
                             #print(f"{network_num} fitness being {self.genomes_list[network_num].fitness}")
-
+                        network_num = 92
                         net = self.networks[network_num]
 
                         if not add_fitness:
                             if finished_arr[j] == 0 :
                                 if status == 2:
-                                    self.genomes_list[network_num].fitness += 5000
+                                    self.genomes_list[network_num].fitness += 10000
                                     print("AI WON THE GAME")
                                 finished_arr[j] = 1
 
@@ -916,20 +920,17 @@ class NeatClass(object):
 
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
-                            self.genomes_list[network_num].fitness += 0.1 * np.tanh(saved_money/5) # reward to incentivize stacking money
-                            self.genomes_list[network_num].fitness += 0.3 * np.tanh((money_val/4)/GLOBAL_VALUES["troops"][5]["tier4"]) # reward to incentivize stacking money
+                            self.genomes_list[network_num].fitness += 0.4 * np.tanh(saved_money/4) # reward to incentivize stacking money
+                            self.genomes_list[network_num].fitness += 0.4 * np.tanh((money_val/4)/GLOBAL_VALUES["troops"][5]["tier4"]) # reward to incentivize stacking money
                             self.genomes_list[network_num].fitness -= 0.05 * np.tanh(tot_tr/2) # reduce the spamming 
-
+                            if t4_troops == 0 and battle_place > 2:
+                                self.genomes_list[network_num].fitness -= 0.4
+                            
                             if action1 == 0:
-                                self.genomes_list[network_num].fitness += 0.01
-                            if action2 == 0:
-                                self.genomes_list[network_num].fitness += 0.01
-                            if action3 == 0:
-                                self.genomes_list[network_num].fitness += 0.01
-                            if action4 == 0:
-                                self.genomes_list[network_num].fitness += 0.01
-                            if action5 == 0:
-                                self.genomes_list[network_num].fitness += 0.01
+                                self.genomes_list[network_num].fitness += 0.5
+
+                            if t4_troops > 0:
+                                self.genomes_list[network_num].fitness += 0.5 * (10**min(t4_troops,3))
                                 
 
                         # action1 = self.sample_action(action1)
@@ -938,7 +939,7 @@ class NeatClass(object):
                         # action4 = self.sample_action(action4)
                         # action5 = self.sample_action(action5)
 
-                        if original_xp > 5000000 :
+                        if original_xp > 3500000 :
                             # the ai hit a infinite loop so it will lose on purpose
                             # just waiting 
                             action5 = 0
@@ -1224,7 +1225,7 @@ class NeatClass(object):
     
     def main_unity_split(self):
         local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward split2.txt')
+        config_path = os.path.join(local_dir, 'config-feedforward split3.txt')
 
         self.establish_connection()
         self.run(config_path, self.eval_genomes_unity_split_actions)
@@ -1256,7 +1257,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-67")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-75")
      
         p.add_reporter(neat.StdOutReporter(True))
         
