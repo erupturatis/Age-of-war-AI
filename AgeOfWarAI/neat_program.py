@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 116
+    generation = 127
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -903,8 +903,8 @@ class NeatClass(object):
                                 if status == 2:
                                     self.genomes_list[network_num].fitness += 10000
                                     print("AI WON THE GAME")
-                                elif original_xp > 5000000:
                                     cnt_win += 1
+                                
                                 finished_arr[j] = 1
 
                         action = net.activate(inputs)
@@ -934,7 +934,10 @@ class NeatClass(object):
                                 self.genomes_list[network_num].fitness += 0.5
 
                             if t4_troops > 0:
-                                self.genomes_list[network_num].fitness += 0.2 * (10**t4_troops)
+                                self.genomes_list[network_num].fitness += 0.02 * (10**min(t4_troops,3))
+                            if self.genomes_list[network_num].fitness > 10000:
+                                print(self.genomes_list[network_num].fitness)
+                                
                                 
 
                         # action1 = self.sample_action(action1)
@@ -985,6 +988,7 @@ class NeatClass(object):
             print(f"A NUMBER OF {cnt_win} AI WON")
             reset_hist = True
 
+        reset_hist = False
         return reset_hist
 
 
@@ -1202,6 +1206,7 @@ class NeatClass(object):
 
         self.save_best(genomes)
         self.generation += 1
+        reset_hist = False
         return reset_hist
     
         #print("GOT TO THE END OF THE FUNCTION")
@@ -1269,7 +1274,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-115")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-193")
      
         p.add_reporter(neat.StdOutReporter(True))
         
