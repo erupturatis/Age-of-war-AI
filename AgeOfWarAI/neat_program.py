@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 127
+    generation = 8
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -765,6 +765,7 @@ class NeatClass(object):
                 finished_arr = list()
                 for j in range(self.env_batch_size):
                     finished_arr.append(0)
+                batch_ended = 0
 
                 while True :
                     # training until all envs int the batch is finished
@@ -820,15 +821,19 @@ class NeatClass(object):
                         
 
                         money = int(mess[7])
+
                         tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
-                        saved_money = money / GLOBAL_VALUES["troops"][enemy_agen]["tier3"]
+                        if player_agen == 5:
+                            tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier4"]
+                
                         money_val = money
                         money = money / tier3_cost
+
                         xp = int(mess[9])
                         original_xp = xp
                         divider =  GLOBAL_VALUES["experience"][player_agen-1]
                         if divider == None:
-                            xp = xp/ 200000
+                            xp = xp / 200000
                         else:
                             xp = xp / divider
                         battle_place = float(mess[11])
@@ -924,29 +929,23 @@ class NeatClass(object):
 
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
-                            self.genomes_list[network_num].fitness += 0.4 * np.tanh(saved_money/4) # reward to incentivize stacking money
-                            self.genomes_list[network_num].fitness += 0.4 * np.tanh((money_val/4)/GLOBAL_VALUES["troops"][5]["tier4"]) # reward to incentivize stacking money
-                            self.genomes_list[network_num].fitness -= 0.05 * np.tanh(tot_tr/2) # reduce the spamming 
-                            if t4_troops == 0 and battle_place > 2:
-                                self.genomes_list[network_num].fitness -= 0.4
-                            
+                            saved_money = money_val / GLOBAL_VALUES["troops"][enemy_agen]["tier3"]
+                            self.genomes_list[network_num].fitness += 0.4 * np.tanh(saved_money/4.0) # reward to incentivize stacking money
+                            self.genomes_list[network_num].fitness += 0.4 * np.tanh((money_val/4.0)/GLOBAL_VALUES["troops"][5]["tier4"]) # reward to incentivize stacking money
+                       
                             if action1 == 0:
-                                self.genomes_list[network_num].fitness += 0.5
+                                self.genomes_list[network_num].fitness += 0.4
 
                             if t4_troops > 0:
-                                self.genomes_list[network_num].fitness += 0.02 * (10**min(t4_troops,3))
-                            if self.genomes_list[network_num].fitness > 10000:
-                                print(self.genomes_list[network_num].fitness)
-                                
-                                
-
+                                self.genomes_list[network_num].fitness += 0.02 * (10**min(t4_troops,3.5))
+          
                         # action1 = self.sample_action(action1)
                         # action2 = self.sample_action(action2)
                         # action3 = self.sample_action(action3)
                         # action4 = self.sample_action(action4)
                         # action5 = self.sample_action(action5)
 
-                        if original_xp > 5000000 :
+                        if original_xp > 5500000 or batch_ended :
                             # the ai hit a infinite loop so it will lose on purpose
                             # just waiting 
                             action5 = 0
@@ -954,6 +953,7 @@ class NeatClass(object):
                             action3 = 0
                             action2 = random.choices([3,4,5,6],[1,1,1,1])[0]
                             action1 = 0
+                            #batch_ended = True
                             #reset_hist = True
 
                         
@@ -988,7 +988,6 @@ class NeatClass(object):
             print(f"A NUMBER OF {cnt_win} AI WON")
             reset_hist = True
 
-        reset_hist = False
         return reset_hist
 
 
@@ -1274,7 +1273,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-193")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-7")
      
         p.add_reporter(neat.StdOutReporter(True))
         
