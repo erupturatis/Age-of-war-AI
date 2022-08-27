@@ -1,4 +1,5 @@
 
+from ast import Global
 import neat
 import time
 import numpy as np
@@ -24,7 +25,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 8
+    generation = 1120
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -823,8 +824,6 @@ class NeatClass(object):
                         money = int(mess[7])
 
                         tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
-                        if player_agen == 5:
-                            tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier4"]
                 
                         money_val = money
                         money = money / tier3_cost
@@ -893,13 +892,11 @@ class NeatClass(object):
 
 
                         battle_place = battle_place * 5
+                        t4_val = money_val / GLOBAL_VALUES["troops"][5]["tier4"]
                      
-                        
-                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, slots_available, *age, *enemy_age, *new_turrets)
-                        #print(inputs)
+                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
+                   
                         network_num = i * self.env_batch_size + j
-
-                            #print(f"{network_num} fitness being {self.genomes_list[network_num].fitness}")
             
                         net = self.networks[network_num]
 
@@ -915,26 +912,28 @@ class NeatClass(object):
                         action = net.activate(inputs)
                         action = np.array(action)
 
-                        action1 = action[0:5] # troop actions
-                        action2 = action[5:13] # turret actions
-                        action3 = action[13:15] # buy slot or not
-                        action4 = action[15:17] # ability or not
-                        action5 = action[17:19] # upgrade age or not
+                        action1 = action[0:4] # troop actions
+                        action2 = action[4:12] # turret actions
+                        action3 = action[12:14] # buy slot or not
+                        action4 = action[14:16] # ability or not
+                        action5 = action[16:18] # upgrade age or not
+                        action6 = action[18:20] # create super soldier or not
     
                         action1 = np.argmax(action1)
                         action2 = np.argmax(action2)
                         action3 = np.argmax(action3)
                         action4 = np.argmax(action4)
                         action5 = np.argmax(action5)
+                        action6 = np.argmax(action6)
 
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
                             saved_money = money_val / GLOBAL_VALUES["troops"][enemy_agen]["tier3"]
                             self.genomes_list[network_num].fitness += 0.4 * np.tanh(saved_money/4.0) # reward to incentivize stacking money
-                            self.genomes_list[network_num].fitness += 0.4 * np.tanh((money_val/4.0)/GLOBAL_VALUES["troops"][5]["tier4"]) # reward to incentivize stacking money
+                            self.genomes_list[network_num].fitness += 0.4 * np.tanh(t4_val/4.0) # reward to incentivize stacking money
                        
                             if action1 == 0:
-                                self.genomes_list[network_num].fitness += 0.4
+                                self.genomes_list[network_num].fitness += 0.6
 
                             if t4_troops > 0:
                                 self.genomes_list[network_num].fitness += 0.02 * (10**min(t4_troops,3.5))
@@ -953,6 +952,7 @@ class NeatClass(object):
                             action3 = 0
                             action2 = random.choices([3,4,5,6],[1,1,1,1])[0]
                             action1 = 0
+                            action6 = 0
                             #batch_ended = True
                             #reset_hist = True
 
@@ -965,7 +965,7 @@ class NeatClass(object):
                             action = 13
                         '''
                      
-                        actions += f"{action1}{action2}{action3}{action4}{action5} "
+                        actions += f"{action1}{action2}{action3}{action4}{action5}{action6} "
 
                     #print(actions)
                     self.communication_socket.send(f"{actions}".encode("utf-8"))
@@ -980,9 +980,6 @@ class NeatClass(object):
 
         self.save_best(genomes)
         self.generation += 1
-
-        if self.generation == 116 :
-            reset_hist = True
         
         if cnt_win >= 3:
             print(f"A NUMBER OF {cnt_win} AI WON")
@@ -1273,7 +1270,7 @@ class NeatClass(object):
 
         #p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-7")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-80")
      
         p.add_reporter(neat.StdOutReporter(True))
         
