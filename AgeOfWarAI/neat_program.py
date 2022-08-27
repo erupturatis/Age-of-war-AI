@@ -74,24 +74,26 @@ class NeatClass(object):
             env.defocus()
     
 
-    def save_best(self, genomes):
+    def save_best(self, genomes, num = -1):
         fitness = 0
         mx = 0
         cnt = 0
-        for i,g in enumerate(genomes):
-            genome = g[1]
-            fitness += genome.fitness
-            if genome.fitness > mx:
-                mx = genome.fitness
-                cnt = i
-        
-        self.fitness_med = (self.generation, fitness / len(genomes), mx, cnt)
-        # print(self.population.best_genome)
-        # print(self.population.best_genome[1])
+        if num == -1:
+            for i,g in enumerate(genomes):
+                genome = g[1]
+                fitness += genome.fitness
+                if genome.fitness > mx:
+                    mx = genome.fitness
+                    cnt = i
+            num = cnt
 
+        self.fitness_med = (self.generation, fitness / len(genomes), mx, num)
+            # print(self.population.best_genome)
+            # print(self.population.best_genome[1])
+            
         try:
             with open(f'winner-generation {self.generation}', 'wb') as f:
-                pickle.dump(genomes[cnt], f)
+                pickle.dump(genomes[num], f)
         except:
             pass
         
@@ -765,7 +767,11 @@ class NeatClass(object):
         #print("after connect")
         confidence_training = 1
         cnt_win = 0
+        
+        self.save_best(genomes, 42)
+
         for p in range (confidence_training):
+        
             # running the same generation more times to account for the stochasticity
             
             for i in range( iterations_num ):
@@ -906,7 +912,9 @@ class NeatClass(object):
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
                    
                         network_num = i * self.env_batch_size + j
-            
+                        # network_num = 42
+                        # 73 93 114
+                        #             
                         net = self.networks[network_num]
 
                         if not add_fitness:
@@ -927,13 +935,14 @@ class NeatClass(object):
                         action4 = action[14:16] # ability or not
                         action5 = action[16:18] # upgrade age or not
                         action6 = action[18:20] # create super soldier or not
-    
+       
                         action1 = np.argmax(action1)
                         action2 = np.argmax(action2)
                         action3 = np.argmax(action3)
                         action4 = np.argmax(action4)
                         action5 = np.argmax(action5)
                         action6 = np.argmax(action6)
+                        
 
                         if add_fitness:
                             self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
@@ -953,7 +962,7 @@ class NeatClass(object):
                         # action4 = self.sample_action(action4)
                         # action5 = self.sample_action(action5)
 
-                        if original_xp > 5500000 or batch_ended :
+                        if original_xp > 8500000 or batch_ended :
                             # the ai hit a infinite loop so it will lose on purpose
                             # just waiting 
                             action5 = 0
