@@ -46,8 +46,8 @@ node_delete_prob        = 0.1
 
 # network parameters
 num_hidden              = 10
-num_inputs              = 29
-num_outputs             = 19
+num_inputs              = 30
+num_outputs             = 20
 
 # node response options
 response_init_mean      = 1.0
@@ -63,7 +63,7 @@ weight_init_mean        = 0.0
 weight_init_stdev       = 1.0
 weight_max_value        = 10
 weight_min_value        = -7.5
-weight_mutate_power     = 0.225
+weight_mutate_power     = 0.175
 weight_mutate_rate      = 0.460
 weight_replace_rate     = 0.1
 
