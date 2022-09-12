@@ -1,5 +1,6 @@
 
 from ast import Global
+from audioop import add
 import neat
 import time
 import numpy as np
@@ -25,7 +26,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 1120
+    generation = 23
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -759,7 +760,7 @@ class NeatClass(object):
         confidence_training = 1
         cnt_win = 0
         
-        self.save_best(genomes, 42)
+
 
         for p in range (confidence_training):
         
@@ -813,6 +814,7 @@ class NeatClass(object):
                         mess = mess.split(' ')
                        
                         status = int(mess[-1])
+                 
                         
                         #print(mess)
                         '''
@@ -903,9 +905,8 @@ class NeatClass(object):
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
                    
                         network_num = i * self.env_batch_size + j
-                        # network_num = 42
-                        # 73 93 114
-                        #             
+                        network_num = 123
+                         
                         net = self.networks[network_num]
 
                         if not add_fitness:
@@ -953,7 +954,7 @@ class NeatClass(object):
                         # action4 = self.sample_action(action4)
                         # action5 = self.sample_action(action5)
 
-                        if original_xp > 8500000 or batch_ended :
+                        if original_xp > 7000000 or batch_ended :
                             # the ai hit a infinite loop so it will lose on purpose
                             # just waiting 
                             action5 = 0
@@ -1247,7 +1248,7 @@ class NeatClass(object):
     
     def main_unity_split(self):
         local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward split3.txt')
+        config_path = os.path.join(local_dir, 'config.txt')
 
         self.establish_connection()
         self.run(config_path, self.eval_genomes_unity_split_actions)
@@ -1277,9 +1278,9 @@ class NeatClass(object):
 
         # Create the population, which is the top-level object for a NEAT run.
 
-        #p = neat.Population(config)
+        p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-80")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-58")
      
         p.add_reporter(neat.StdOutReporter(True))
         
