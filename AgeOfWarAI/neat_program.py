@@ -26,7 +26,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 23
+    generation = 0
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -741,6 +741,8 @@ class NeatClass(object):
 
     def eval_genomes_unity_split_actions(self, genomes, config):
         #print("got to eval unity")
+
+     
         self.POP_SIZE = len(genomes)
         iterations_num = int(self.POP_SIZE / self.env_batch_size)
 
@@ -805,7 +807,7 @@ class NeatClass(object):
                         
                         if finished < 45:
                             inp = False
-                        inp = False
+                        #inp = False
                         if inp:
                             print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
@@ -878,13 +880,8 @@ class NeatClass(object):
                         player_troops_total = np.array(player_troops_total)/5.0
                         enemy_troops_total = np.array(enemy_troops_total)/5.0
 
-                        player_troops_total = np.sum(player_troops_total)
-                        enemy_troops_total = np.sum(enemy_troops_total)
-
-                        # in_train = np.tanh(in_train)
-                        # player_troops_total = np.tanh(player_troops_total)
-                        # enemy_troops_total = np.tanh(enemy_troops_total)
-                        # slots_available = np.tanh(slots_available)
+                        # player_troops_total = np.sum(player_troops_total)
+                        # enemy_troops_total = np.sum(enemy_troops_total)
 
                         age = [0,0,0,0,0]
                         age[player_agen-1] = 1
@@ -902,18 +899,18 @@ class NeatClass(object):
                         battle_place = battle_place * 5
                         t4_val = money_val / GLOBAL_VALUES["troops"][5]["tier4"]
                      
-                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
-                   
+                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
+                    
                         network_num = i * self.env_batch_size + j
-                        network_num = 123
+                        # network_num = 138
                          
                         net = self.networks[network_num]
 
                         if not add_fitness:
                             if finished_arr[j] == 0 :
                                 if status == 2:
-                                    self.genomes_list[network_num].fitness += 10000
-                                    print("AI WON THE GAME")
+                                    self.genomes_list[network_num].fitness += 20000
+                                    print(f"AI WON THE GAME {network_num}")
                                     cnt_win += 1
                                 
                                 finished_arr[j] = 1
@@ -963,7 +960,7 @@ class NeatClass(object):
                             action2 = random.choices([3,4,5,6],[1,1,1,1])[0]
                             action1 = 0
                             action6 = 0
-                            #batch_ended = True
+                            batch_ended = True
                             #reset_hist = True
 
                         
@@ -988,7 +985,7 @@ class NeatClass(object):
             #print(f"fitness for {i} is {genome.fitness}")
             genome.fitness /= confidence_training
 
-        self.save_best(genomes)
+        
         self.generation += 1
         
         if cnt_win >= 3:
@@ -1280,7 +1277,7 @@ class NeatClass(object):
 
         p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-58")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-65")
      
         p.add_reporter(neat.StdOutReporter(True))
         
