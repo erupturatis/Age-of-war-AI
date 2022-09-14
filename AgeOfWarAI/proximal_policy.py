@@ -150,14 +150,11 @@ class ProximalPolicy(object):
         print("started envs and connected to unity")
 
         evaluating = True
+        env = self.envs[0]
+        env.focus()
+        env.printing = True
         while evaluating:
             # getting inputs
-
-
-            env = self.envs[0]
-            env.focus()
-            env.printing = True
- 
             time1 = time.time()
             inputs, ended = env.get_inputs()
             print(f"TIME INPUTS {time.time() - time1}")
@@ -168,20 +165,19 @@ class ProximalPolicy(object):
             self.communication_socket.send(f"{inputs}".encode("utf-8"))
             # getting outputs
             action = self.receive_message(self.communication_socket)
-            print(action)
-            # playing output
-
-            #env.take_action(int(action))
-            if int(action) > 14:
-                take_action(int(action))
-            else:
-                env.take_action(int(action))
- 
-            pass
-
         
+            # playing output
+            if int(action) <= 14:
+                env.take_action(int(action))
+            else:
+                if action == 22:
+                    print("ACTION 22 TAKEN ______________________________________")
+                take_action(action)
+                
+        self.master.save_all_data_packets()
+           
+          
 
-    
     def main(self):
         local_dir = os.path.dirname(__file__)
         self.establish_connection()

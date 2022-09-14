@@ -1,12 +1,7 @@
 import numpy as np
 import cv2
 import pyautogui
-from PIL import Image, ImageOps, ImageFilter
 from utils import *
-import warnings
-from game_environment import Env
-from GLOBALS import GLOBAL_VALUES
-import time
 
 
 class GameVision(object):
@@ -133,62 +128,76 @@ class GameVision(object):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
         
         img = self.screenshot
+        # img3 = img[100:-700,680:-1680]
+        img2 = img[100:-700,875:-1400]
         img = img[:-700,680:-1680]
 
+        # cv2.imshow("g",img2)
+        # cv2.waitKey()
+        
         result = self.get_position(img=img, template=template, treshold=0.95)
         if len(result) == 0:
             raise("Game Paused") 
-
-        img = cv2.resize(img, (img.shape[1],img.shape[0]) )
+            
+        img = cv2.resize(img, (img.shape[0]*2, img.shape[1]*2))
         ocr = self.ocr
-       
-       
-        result = ocr.ocr(img, cls=True)
 
+        result = ocr.ocr(img, cls=True)
         txts = [line[1][0] for line in result]
 
-           
+        result2 = ocr.ocr(img2, cls=True)
+        txts2 = [line[1][0] for line in result2]
+    
         try:
-            result = result[0]
             money_1 = txts[0]
-
             cnt = 0
-            
-
+            print(txts)
             for i,c in enumerate(txts[1]):
                 if c<='9' and c >='0':
                     cnt = i
                     break
-
             xp_1 = txts[1][cnt:]
-
-
             money_finale = self.env.money
             xp_finale = self.env.xp
+            money_1 = int(money_1)
+            xp_1 = int(xp_1)
 
-            try:
-                money_1 = int(money_1)
-            except:
-                money_1 = -9999
-
-            try:
-                xp_1 = int(xp_1)
-            except:
-                xp_1 = -9999
-
-
-
-
+            print(self.env.enemy_age)
+            # if money_finale > GLOBAL_VALUES["troops"][self.env.enemy_age]["tier3"]:
+            #     if xp_finale > 4000:
+            #         if money_finale * 9 > money_1 and (money_1 < xp_finale/2 and xp_finale > 4000):
+            #             money_finale = money_1
+                        
+            #     else:
+            #         money_finale = money_1
+            # else:
+                
             money_finale = money_1
             xp_finale = xp_1
-
-            if money_finale == -9999: money_finale = self.env.money
-            if xp_finale == -9999: xp_finale = self.env.xp
         except:
             money_finale = self.env.money
             xp_finale = self.env.xp
 
-        return money_finale, xp_finale
+        troop_player = [0,0,0]
+        troop_enemy = 0
+        battle_place = 0.5
+        print(txts2)
+        try:
+            troops = txts2[0].split('-')
+            troop_player = (int(troops[0]),int(troops[1]),int(troops[2]))
+            self.prev = troop_player
+            
+            battle_place = float(troops[3])
+            self.prb = battle_place
+        except:
+            battle_place = -1
+            troop_player = [0,0,0]
+
+
+        print(money_finale)
+
+
+        return money_finale, xp_finale, troop_player, battle_place
 
     
     def click_game(self):

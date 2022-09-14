@@ -2,6 +2,7 @@ from utils import *
 from game_environment import Env
 from game_vision import GameVision
 from neat_program import NeatClass
+from proximal_policy import ProximalPolicy
 from time import time
 from GLOBALS import GLOBAL_VALUES
 import time
@@ -12,7 +13,7 @@ import math
 # 4 windows would mean an action per second which should be enough
 
 class Master(object):
-
+    ppo = False
     number_windows = 1
     wm = None
     ocr = None
@@ -23,11 +24,11 @@ class Master(object):
 
     scans = 0
 
-    def __init__(self, number_windows = 1, difficulty = 1) -> None:
+    def __init__(self, number_windows = 1, difficulty = 1, ppo = False) -> None:
 
         self.number_windows = number_windows
         self.wm = WindowManagement()
-
+        self.ppo = ppo
         ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False) # need to run only once to download and load model into memory
         self.ocr = ocr
 
@@ -126,29 +127,27 @@ class Master(object):
 
         
         
-        if env.check_ability_time() > 6.5 :
-            player_age_index = gm.scan_age(flip = False)
-            in_train = gm.scan_training()
-            gm.initial_scan_health()
-            player_health, enemy_health = gm.scan_health() # not meaningful time
-            if player_health == None or enemy_health == None:
-                player_health = env.hp
-                enemy_health = env.enemy_hp
-            enemy_age_index = gm.scan_age(flip = True)
-        else:
-            player_age_index = env.age
-            in_train = 0
+      
+        player_age_index = gm.scan_age(flip = False)
+        in_train = gm.scan_training()
+        gm.initial_scan_health()
+        player_health, enemy_health = gm.scan_health() # not meaningful time
+        if player_health == None or enemy_health == None:
             player_health = env.hp
             enemy_health = env.enemy_hp
-            enemy_age_index = env.enemy_age
 
-        money, xp = gm.scan_money_and_xp(env) 
-        
+        enemy_age_index = gm.scan_age(flip = True)
+      
+
+        time1 = time.time()
+        money, xp, p_troops, battle_place1 = gm.scan_money_and_xp(env) 
+        print(f"{time.time() - time1} TIME FOR XPTROOPS {battle_place1} enemy age {enemy_age_index}")
         ability = env.check_ability_avalability()
 
         Error = gm.scan_cancel()
         if Error:
             pyautogui.click(1675,100)
+
         if player_age_index != None:
             env.age = player_age_index
 
@@ -157,7 +156,7 @@ class Master(object):
         enemy_troops_total = [0,0,0,0]
         player_troops_total = [0,0,0,0]
 
-
+        time1 = time.time()
         if env.player_aged_recently > 0:
             # also checks for troops from previous age
             env.player_aged_recently -= 1 
@@ -222,10 +221,11 @@ class Master(object):
             if env.enemy_age != 5:
                 enemy_troops_total.append(0)
        
-                
+        time2 = time.time()
+        print(f"TIME THAT COULD BE REDUCED {time2-time1}")
 
-        battle_place = min(max_player, 1-max_enemy)
-      
+    
+        time1 = time.time()
 
         slots_available = env.available_slots
 
@@ -236,12 +236,20 @@ class Master(object):
             tier,turr_age = turret[0], turret[1]
             
             if turr_age != 0:
-                sig_tier = self.stable_sigmoid(tier)
+                if not self.ppo:
+                    tier -= 1
+                    sig_tier = np.tanh(tier)
+                else:
+                    sig_tier = tier
+                    
                 new_turrets.append(sig_tier) # turret exists
                 if turr_age == env.age:
-                    new_turrets.append(1)
+                    new_turrets.append(turr_age)
                 else:
-                    new_turrets.append(-1)
+                    if self.ppo:
+                        new_turrets.append(turr_age)
+                    else:
+                        new_turrets.append(-1)
             else:
                 new_turrets.append(0)
                 new_turrets.append(0)
@@ -251,21 +259,20 @@ class Master(object):
         age[env.age-1] = 1
      
         
-
-        if env.enemy_age != enemy_age_index:
-            env.enemy_age = enemy_age_index
-            env.enemy_aged_recently = 5
-
         enemy_age = [0,0,0,0,0]
+        
         if enemy_age_index == None:
             enemy_age_index = env.age
-            
+
+        env.enemy_age = enemy_age_index
         enemy_age[enemy_age_index-1] = 1
 
         #self.wm.defocus_window(window_num)
         time2 = time.time()
+        battle_place = min(max_player, 1-max_enemy)
+        if battle_place1 != -1:
+            battle_place = battle_place1
 
-  
         data_packet = [
             ["number of troops in training", in_train],
             ["player hp percent", player_health],
@@ -290,12 +297,15 @@ class Master(object):
         
         env.money = money
         env.xp = xp
-
+        t4_val = money / 150000
         money = money / tier3_cost
 
         divider =  GLOBAL_VALUES["experience"][env.age-1]
         if divider == None:
-            xp = 0
+            if not self.ppo:
+                xp = xp/ 200000
+            else:
+                xp = xp/ 10000000
         else:
             xp = xp / divider
 
@@ -305,16 +315,35 @@ class Master(object):
             ability = 0
 
         #slots_available = np.tanh(slots_available)
+        if not self.ppo :
+            in_train = np.array(in_train)/5
+     
+        t4_troops = player_troops_total[3]
+        if not np.sum(p_troops) == 0:
+            player_troops_total[0] = p_troops[0]
+            player_troops_total[1] = p_troops[1]
+            player_troops_total[2] = p_troops[2]
 
-        in_train = np.array(in_train)/5
-        player_troops_total = np.array(player_troops_total)/5
-        enemy_troops_total = np.array(enemy_troops_total)/5
+        if not self.ppo:
+            player_troops_total = np.array(player_troops_total)/5.0
+            enemy_troops_total = np.array(enemy_troops_total)/5.0
+          
+        
+        if not self.ppo:
+            battle_place = battle_place * 5
 
-        money = money + 1
-        money = np.log(min(money, 50))
-        xp = np.log(min(xp + 1, 20))
+            money = money + 1
+            money = np.log(min(money, 50))
+            xp = np.log(min(xp + 1, 20))
+       
+        
+        # battle_place -= 0.18
+        #inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, slots_available, *age, *enemy_age, *new_turrets) input function for netwokrs with 30 inputs
+        if not self.ppo:
+            inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
+        else:
+            inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, env.total_slots, env.age, env.enemy_age, *new_turrets)
 
-        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
         data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
         # if self.scans % 25 == 0:
@@ -337,7 +366,18 @@ def run_unity():
     #neats.main_unity()
     neats.main_unity_split()
 
+def run_proximal_policy():
+    number_of_windows = 1
+    difficulty = 2
+    
+    master = Master(number_of_windows, difficulty, True)
+    neats = ProximalPolicy(master.envs)
+    neats.master = master
+    
+    neats.main()
+
 if __name__ == "__main__":
-    run_unity()
+    # run_unity()
+    run()
 
 

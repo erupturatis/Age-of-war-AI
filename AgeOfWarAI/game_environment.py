@@ -126,7 +126,7 @@ class Env(object):
             self.money -= self.TURRETS_COST[self.age][f'tier{tier}']
             pos = self.MOUSE_VALUES[f'tier{tier}']
            
-            self.move_and_click(pos, .1)
+            self.move_and_click(pos, .35)
             slot = None
             
             for i,x in enumerate(self.slots):
@@ -135,40 +135,14 @@ class Env(object):
                     break
             pos = self.MOUSE_VALUES[f'turret_spot{i}']
            
-            self.move_and_click(pos, .1)
+            self.move_and_click(pos, .35)
 
             self.slots[slot] = 1
 
             self.turrets[slot] = [tier, self.age]
             self.available_slots -= 1
-            return True
-        elif self.available_slots == 0:
-          
-            if aux == True:
-                print("something went very wrong with turret replacement")
-            min_age = self.age
-            #print(f"MING AGE {min_age}")
-            turr_sell = 1
-            turr_tier = 1
-            #print(self.turrets)
-            for i,x in enumerate(self.turrets):
-                #print(f"x {x} min age {min_age}")
-                
-                if x[1] <= min_age and x[1] != 0:
-                   # print("entered")
-                    min_age = x[1]
-                    turr_sell = i
-                    turr_tier = x[0]
+            return True 
 
-            if min_age == self.age:
-                return False
-
-            money_returned = int(self.TURRETS_COST[min_age][f'tier{turr_tier}'] / 2)
-            total_money = self.money + money_returned - 1
-            if total_money >= self.TURRETS_COST[self.age][f'tier{tier}'] and self.check_ability_time() > 6.5:
-                self.sell_turretn(turr_sell)
-                return self.spawn_turret(tier, True)
-           
         return False
     
     def spawn_turret1(self):
@@ -181,9 +155,13 @@ class Env(object):
         return self.spawn_turret(3)
     
     def move_and_click(self, pos, sleep):
+        time.sleep(.1)
         pg.moveTo(*pos)
         time.sleep(sleep)
         pg.click()
+        time.sleep(.1)
+        
+       
 
     def use_ability(self):
         if self.check_ability_avalability():
@@ -271,16 +249,19 @@ class Env(object):
             [0,0]
         ]
 
-    def actions_manager(self, action1, action2, action3, action4, action5):
+    def actions_manager(self, action1, action2, action3, action4, action5, action6):
         if action1 == 0:
             self.take_action(13)
-        elif action1 == 4:
+        elif action1 == 3:
             self.take_action(0)
         elif action1 == 1:
             self.take_action(1)
         elif action1 == 2:
             self.take_action(2)
-        elif action1 == 3:
+
+        if action6 == 0:
+            self.take_action(13)
+        elif action6 == 1:
             self.take_action(3)
 
         if action2 == 0:
@@ -314,11 +295,14 @@ class Env(object):
             self.take_action(13)
         elif action5 == 1:
             self.take_action(12)
+        
+    
 
     def take_action(self, action):
         action = self.ACTIONS[action]
         if self.printing:
             print(f"trying to do action {action}")
+
         ACTIONS_DICT = {
             "troop_tier1":self.spawn_troop1, 
             "troop_tier2":self.spawn_troop2, 

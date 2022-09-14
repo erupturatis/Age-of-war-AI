@@ -1,5 +1,4 @@
 
-from ast import Global
 import neat
 import time
 import numpy as np
@@ -264,6 +263,7 @@ class NeatClass(object):
             env.focus()
             env.printing = True
             inputs, ended = env.get_inputs()
+            
       
             if ended:
                 if inputs == True:
@@ -279,30 +279,40 @@ class NeatClass(object):
 
             action = net.activate(inputs)
             action = np.array(action)
+           
+
+            action1 = action[0:4] # troop actions
+            action2 = action[4:12] # turret actions
+            action3 = action[12:14] # buy slot or not
+            action4 = action[14:16] # ability or not
+            action5 = action[16:18] # upgrade age or not
+            action6 = action[18:20] # upgrade age or not
+            print("inputs")
+            print(inputs)
+            print("actions")
             print(action)
+            # print(action1)
+            # print(action2)
+            # print(action3)
+            # print(action4)
+            # print(action5)
+            print(action6)
+            action1 = np.argmax(action1)
+            action2 = np.argmax(action2)
+            action3 = np.argmax(action3)
+            action4 = np.argmax(action4)
+            action5 = np.argmax(action5)
+            action6 = np.argmax(action6)
 
-            action1 = action[0:5] # troop actions
-            action2 = action[5:13] # turret actions
-            action3 = action[13:15] # buy slot or not
-            action4 = action[15:17] # ability or not
-            action5 = action[17:19] # upgrade age or not
-
-            # action1 = np.argmax(action1)
-            # action2 = np.argmax(action2)
-            # action3 = np.argmax(action3)
-            # action4 = np.argmax(action4)
-            # action5 = np.argmax(action5)
-
-            action1 = self.sample_action(action1)
-            action2 = self.sample_action(action2)
-            action3 = self.sample_action(action3)
-            action4 = self.sample_action(action4)
-            action5 = self.sample_action(action5)
+            # action1 = self.sample_action(action1)
+            # action2 = self.sample_action(action2)
+            # action3 = self.sample_action(action3)
+            # action4 = self.sample_action(action4)
+            # action5 = self.sample_action(action5)
             
             self.act += 1
       
-            Taken = env.actions_manager(action1,action2,action3,action4,action5)
-            print(Taken)
+            Taken = env.actions_manager(action1, action2, action3, action4, action5, action6)
             print(f"TOTAL TIME {time.time() - time1}")
 
             if Taken == True:
@@ -912,9 +922,7 @@ class NeatClass(object):
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
                    
                         network_num = i * self.env_batch_size + j
-                        # network_num = 42
-                        # 73 93 114
-                        #             
+            
                         net = self.networks[network_num]
 
                         if not add_fitness:
@@ -1238,11 +1246,11 @@ class NeatClass(object):
     def main(self):
         
         local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward split2.txt')
+        config_path = os.path.join(local_dir, 'config-feedforward split3.txt')
 
         self.start_envs()
         #self.run(config_path, self.eval_genomes)
-        self.run_winner(config_path, "wn38")
+        self.run_winner(config_path, "wn114Gen81-winnerNormal")
 
         # self.random_actions()
     
