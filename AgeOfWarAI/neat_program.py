@@ -247,7 +247,7 @@ class NeatClass(object):
         money = money / tier3_cost
 
         divider =  GLOBAL_VALUES["experience"][age_index-1]
-        xp = xp/divider
+        xp = xp / divider
 
         in_train = np.array(in_train)/5
         print(f"PLAYER TOT {player_troops_total} {enemy_troops_total}")
@@ -257,8 +257,6 @@ class NeatClass(object):
         player_troops_total = np.array(player_troops_total)/5.0
         enemy_troops_total = np.array(enemy_troops_total)/5.0
           
-        
-   
         battle_place = battle_place * 5
 
         money = money + 1
@@ -283,12 +281,24 @@ class NeatClass(object):
                 new_turrets.append(0)
 
         age = [0,0,0,0,0]
-        age[age_index] = 1
+        age[age_index-1] = 1
         enemy_age = [0,0,0,0,0]
-        enemy_age[enemy_age_index] = 1
+        enemy_age[enemy_age_index-1] = 1
         new_inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)        
         return new_inputs
 
+    def preprocess_turrets(self, turrets):
+        new_turrets = list()
+        for turret in turrets:
+
+            tier,turr_age = turret[0], turret[1]
+
+            if turr_age != 0:
+                tier += 1
+
+            new_turrets.append([tier, turr_age])
+
+        return new_turrets
 
     def run_winner(self, config_file, winner):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -317,6 +327,7 @@ class NeatClass(object):
             env.printing = True
             inputs, ended = env.get_inputs()
             inputs = self.process_data_neat_split(inputs)
+            print(inputs)
             if ended:
                 if inputs == True:
                     print("AI WON")
@@ -429,181 +440,6 @@ class NeatClass(object):
         self.communication_socket = communication_socket
 
 
-    def run_winner_unity(self, config_file, winner):
-        #print("got to eval unity")
-        config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                            neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                            config_file)
-
-        with open(f"{winner}", "rb") as f:
-            genome = pickle.load(f)
-
-        net = neat.nn.FeedForwardNetwork.create(genome[1], config)
-        print("loaded network")
-      
-        finished = list()
-        fitnesses = list()
-        for i in range(self.env_batch_size):
-            finished.append(0)
-            fitnesses.append(0)
-
-        
-
-        while True :
-
-            #print(f"actions taken per batch {iter} with finished {finished_envs}")
-            message = self.receive_message(self.communication_socket)
-            #finished = message.count('*')
-            message = message.split('|')
-            #print(len(message))
-            #print(message)
-            '''
-            '', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 ', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 
-0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 '
-
-            '''
-            message = message[1:]
-            actions = ""
-            
-            
-            
-
-            for j in range(self.env_batch_size):
-                # processing the network i*50 + j and j environment
-                # processing inputs
-                mess = message[j] 
-                inp = False
-                if mess.count('*') != 0:
-                    inp = True
-                    if finished[j] == 0:
-                        finished[j] = 1
-                        print(f"FITNESS FOR {j} IS {fitnesses[j]}")
-
-                inp = True
-                mess = mess.split(' ')
-                #print(mess)
-                '''
-                ['', '0', 'php', '1.000', 'ehp', '1.000', 'mn', '17500', 'xp', '999999', 'bp', '0.500', 'ab', '1', 'ptrps', '0', '0', '0', '0', '', 'etrps', '0', '0', '0', '0', '', 'slots', '1', 'age', '1', 'eage', '1', 'turrets', '0', '0', '0', '0', '0', '0', '0', '0', '']
-                '''
-                player_agen = int(mess[29])
-                enemy_agen = int(mess[31])
-
-                in_train = int(mess[1])
-                player_health = float(mess[3])
-                enemy_health = float(mess[5])
-
-                
-
-                money = int(mess[7])
-                tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
-                money = money / tier3_cost
-                xp = int(mess[9])
-                original_xp = xp
-                divider =  GLOBAL_VALUES["experience"][player_agen-1]
-                if divider == None:
-                    xp = 0
-                else:
-                    xp = xp / divider
-                battle_place = float(mess[11])
-                ability = int(mess[13])
-                player_troops_total = [int(mess[15]), int(mess[16]), int(mess[17]), int(mess[18])]
-                enemy_troops_total = [int(mess[21]), int(mess[22]), int(mess[23]), int(mess[24])]
-                slots_available = int(mess[27])
-                turrets = [
-                    [int(mess[33]),int(mess[34])],
-                    [int(mess[35]),int(mess[36])],
-                    [int(mess[37]),int(mess[38])],
-                    [int(mess[39]),int(mess[40])],
-                ]
-                #processing data
-
-                new_turrets = list()
-                for turret in turrets:
-                    tier,turr_age = turret[0], turret[1]
-                    
-                    if turr_age != 0:
-                        sig_tier = np.tanh(tier)
-                        new_turrets.append(sig_tier) # turret exists
-                        if turr_age == player_agen:
-                            new_turrets.append(1)
-                        else:
-                            new_turrets.append(-1)
-                    else:
-                        new_turrets.append(0)
-                        new_turrets.append(0)
-
-                in_train = np.tanh(in_train)
-                player_troops_total = np.tanh(player_troops_total)
-                enemy_troops_total = np.tanh(enemy_troops_total)
-                slots_available = np.tanh(slots_available)
-
-                age = [0,0,0,0,0]
-                age[player_agen-1] = 1
-
-                enemy_age = [0,0,0,0,0]
-                enemy_age[enemy_agen-1] = 1
-
-                inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
-        
-                fitnesses[j] += 0.2 # reward because the game hasn't ended
-
-                #net = self.networks[network_num]
-                print("INPUTS")
-                print(inputs)
-                action = net.activate(inputs)
-                action = np.array(action)
-                print("ACTION")
-                print(action)
-                action = stats.zscore(action) * 1.5
-                action = self.softmax(action)
-                
-                population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-                
-
-                
-                if original_xp > 5000000 :
-                    # the ai hit a infinite loop so it will lose on purpose
-                    # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
-                    action[8] += 10
-                    action[9] += 10
-                    action[10] += 10
-                    action[11] += 10
-                    action[13] += 10
-                    reset_hist = True
-
-                val = action[np.argmax(action)]
-                '''
-                action = np.argmax(action)
-                if np.isnan(val):
-                    action = 13
-                '''
-                if np.isnan(val):
-                    action = 13
-                else:
-                    #action = np.argmax(action)
-                    action = choices(population, action)
-                    action = action[0]
-                    
-                if inp:
-                    print(action)
-                    pass
-
-                actions += f"{action} "
-
-            time2 = time.time()
-            
-                
-            #print(actions)
-            #print(time2-time1)
-            self.communication_socket.send(f"{actions}".encode("utf-8"))
-            #print(finished)
-            if finished == 50:
-                break
-                   
-        self.generation += 1
-        return reset_hist
-
-
 
     def sample_action(self, action):
         lng = len(action)
@@ -701,26 +537,16 @@ class NeatClass(object):
                         in_train = int(mess[1])
                         player_health = float(mess[3])
                         enemy_health = float(mess[5])
-
-                        
-
                         money = int(mess[7])
-
-                        tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
-                
                         money_val = money
-                        money = money / tier3_cost
-
+                        t4_val = money_val / 150000
                         xp = int(mess[9])
                         original_xp = xp
-                        divider =  GLOBAL_VALUES["experience"][player_agen-1]
-                        if divider == None:
-                            xp = xp / 200000
-                        else:
-                            xp = xp / divider
+                 
                         battle_place = float(mess[11])
                         ability = int(mess[13])
                         player_troops_total = [int(mess[15]), int(mess[16]), int(mess[17]), int(mess[18])]
+                        t4_troops = player_troops_total[3]
                         enemy_troops_total = [int(mess[21]), int(mess[22]), int(mess[23]), int(mess[24])]
                         slots_available = int(mess[27])
                         turrets = [
@@ -729,51 +555,12 @@ class NeatClass(object):
                             [int(mess[37]),int(mess[38])],
                             [int(mess[39]),int(mess[40])],
                         ]
+                        total_slots = int(mess[41])
                         #processing data
-
-                        new_turrets = list()
-                        for turret in turrets:
-                            tier,turr_age = turret[0], turret[1]
-                            
-                            if turr_age != 0:
-                                sig_tier = np.tanh(tier)
-                                new_turrets.append(sig_tier) # turret exists
-                                if turr_age == player_agen:
-                                    new_turrets.append(1)
-                                else:
-                                    new_turrets.append(-1)
-                            else:
-                                new_turrets.append(0)
-                                new_turrets.append(0)
-
-                        
-                        in_train = np.array(in_train)/5
-                        t4_troops = player_troops_total[3]
-
-                        player_troops_total = np.array(player_troops_total)/5.0
-                        enemy_troops_total = np.array(enemy_troops_total)/5.0
-
-                        # player_troops_total = np.sum(player_troops_total)
-                        # enemy_troops_total = np.sum(enemy_troops_total)
-
-                        age = [0,0,0,0,0]
-                        age[player_agen-1] = 1
-
-                        enemy_age = [0,0,0,0,0]
-                        enemy_age[enemy_agen-1] = 1
-                        tot_tr = np.sum(player_troops_total)
-                
-                        
-                        money = money + 1
-                        money = np.log(min(money, 50))
-                        xp = np.log(min(xp + 1, 20))
-
-
-                        battle_place = battle_place * 5
-                        t4_val = money_val / GLOBAL_VALUES["troops"][5]["tier4"]
-                     
-                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
-                    
+                        # note that turret tiers for original game are 1 2 3 while unity turrets are 0 1 2
+                        turrets = self.preprocess_turrets(turrets)
+                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, slots_available, total_slots, player_agen, enemy_agen, turrets)
+                        inputs = self.process_data_neat_split(inputs)
                         network_num = i * self.env_batch_size + j
                         net = self.networks[network_num]
 
@@ -789,12 +576,12 @@ class NeatClass(object):
                         action = net.activate(inputs)
                         action = np.array(action)
 
-                        action1 = action[0:4] # troop actions
-                        action2 = action[4:12] # turret actions
-                        action3 = action[12:14] # buy slot or not
-                        action4 = action[14:16] # ability or not
-                        action5 = action[16:18] # upgrade age or not
-                        action6 = action[18:20] # create super soldier or not
+                        action1 = action[0:7] # troop actions
+                        action2 = action[7:15] # turret actions
+                        action3 = action[15:17] # buy slot or not
+                        action4 = action[17:19] # ability or not
+                        action5 = action[19:21] # upgrade age or not
+                        action6 = action[21:24] # create super soldier or not
        
                         action1 = np.argmax(action1)
                         action2 = np.argmax(action2)
@@ -905,7 +692,7 @@ class NeatClass(object):
 
         p = neat.Population(config)
 
-        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-65")
+       # p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-65")
      
         p.add_reporter(neat.StdOutReporter(True))
         

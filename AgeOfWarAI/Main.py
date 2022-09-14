@@ -185,7 +185,7 @@ class Master(object):
             ability = 0
 
         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, slots_available, env.total_slots, env.age, env.enemy_age, turrets)
-        print(len(inputs))
+      
         data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
         # if self.scans % 25 == 0:
@@ -220,6 +220,6 @@ def run_proximal_policy():
 
 if __name__ == "__main__":
     # run_unity()
-    run()
+    run_unity()
 
 
