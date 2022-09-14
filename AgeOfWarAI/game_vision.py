@@ -1,12 +1,7 @@
 import numpy as np
 import cv2
 import pyautogui
-from PIL import Image, ImageOps, ImageFilter
 from utils import *
-import warnings
-from game_environment import Env
-from GLOBALS import GLOBAL_VALUES
-import time
 
 
 class GameVision(object):
@@ -89,7 +84,6 @@ class GameVision(object):
 
 
     def get_position(self, img, template, treshold, method = cv2.TM_CCOEFF_NORMED):
-
         result = cv2.matchTemplate(img, template, method)
 
         if method == cv2.TM_SQDIFF_NORMED:
@@ -133,97 +127,76 @@ class GameVision(object):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/coin_and_exp.png')
         
         img = self.screenshot
-        img = img[:-700,680:-1680]
-
+        # img3 = img[100:-700,680:-1680]
+        img2 = img[70:-490,650:-800]
+        img = img[:-450,500:-1150]
+        
         result = self.get_position(img=img, template=template, treshold=0.95)
         if len(result) == 0:
             raise("Game Paused") 
-
-        img = cv2.resize(img, (img.shape[1],img.shape[0]) )
+            
+        img = cv2.resize(img, (img.shape[0]*2, img.shape[1]*2))
         ocr = self.ocr
-       
-       
-        result = ocr.ocr(img, cls=True)
 
+        result = ocr.ocr(img, cls=True)
         txts = [line[1][0] for line in result]
 
-           
+        result2 = ocr.ocr(img2, cls=True)
+        txts2 = [line[1][0] for line in result2]
+
         try:
-            result = result[0]
             money_1 = txts[0]
-
             cnt = 0
-            
-
+            print(txts)
             for i,c in enumerate(txts[1]):
                 if c<='9' and c >='0':
                     cnt = i
                     break
-
             xp_1 = txts[1][cnt:]
-
-
             money_finale = self.env.money
             xp_finale = self.env.xp
+            money_1 = int(money_1)
+            xp_1 = int(xp_1)
 
-            try:
-                money_1 = int(money_1)
-            except:
-                money_1 = -9999
-
-            try:
-                xp_1 = int(xp_1)
-            except:
-                xp_1 = -9999
-
-
-
-
+            print(self.env.enemy_age)
+                
             money_finale = money_1
             xp_finale = xp_1
-
-            if money_finale == -9999: money_finale = self.env.money
-            if xp_finale == -9999: xp_finale = self.env.xp
         except:
             money_finale = self.env.money
             xp_finale = self.env.xp
 
-        return money_finale, xp_finale
+
+        troop_player = [0,0,0,0]
+        troop_enemy = [0,0,0,0]
+        battle_place = 1
+        print(txts2)
+        try:
+            troops = txts2[0].split('-')
+       
+            troop_player = (int(troops[0]),int(troops[1]),int(troops[2]),int(troops[3]))
+            troop_enemy = (int(troops[4]),int(troops[5]),int(troops[6]),0)
+            self.prev = troop_player
+            
+            battle_place = float(troops[7])
+            self.prb = battle_place
+        except:
+            battle_place = 1
+            troop_player = [0,0,0,0]
+
+
+        print(money_finale)
+
+
+        return money_finale, xp_finale, troop_player, troop_enemy, battle_place
 
     
     def click_game(self):
         pyautogui.click(700,300)
 
     def initial_scan_health(self):
-        self.player_health_position = (700, 279)
-        self.enemy_health_position = (2530, 279)
-        return
-        template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
-        img = self.screenshot # change
-        #img = cv2.imread(f'AgeOfWarAI/assets/tests/test1.png')
-
-        positions = self.get_position(img, template, 0.01, cv2.TM_SQDIFF_NORMED)
-        positions.sort()
-        #self.visualize_locations(img, positions)
-        #print(len(positions))
-
-        new_positions = list()
-        positions.append((9999,9999))
-        new_positions.sort()
-        for i in range(len(positions)-1):
-            if abs(positions[i][0] - positions[i+1][0]) < 10:
-                continue
-            else:
-                new_positions.append(positions[i])
-        if len(new_positions) >= 2:
-            self.player_health_position = new_positions[0]
-            self.enemy_health_position = new_positions[1]
-        else:
-            pass
-        # print(new_positions[0])
-        # print(new_positions[1])
-        # print("new")
-
+        self.player_health_position = (515, 194)
+        self.enemy_health_position = (1692, 194)
 
     def scan_health(self):
         template = cv2.imread(f'AgeOfWarAI/assets/misc/hpbar.png')
@@ -498,8 +471,7 @@ class GameVision(object):
         #img = cv2.imread('AgeOfWarAI/assets/tests/test1.png')
         template = cv2.imread('AgeOfWarAI/assets/misc/training.png')
 
-        img = img[:-800,800:-800]
-
+        img = img[:-500,750:-600]
         result = cv2.matchTemplate(img, template, cv2.TM_SQDIFF_NORMED)
         locations = np.where(result <= .001)
         locations = list(zip(*locations[::-1]))
@@ -507,22 +479,6 @@ class GameVision(object):
         locations = self.clustering_values(locations, 3, 0)
 
         return len(locations)
-
-    def scan_cancel(self):
-        img = self.screenshot # change
-        #img = cv2.imread('AgeOfWarAI/assets/environment/test4.png')
-        template = cv2.imread('AgeOfWarAI/assets/misc/training.png')
-
-        img = img[:-700,1500:-700]
-        # cv2.imshow("fwea",img)
-        # cv2.waitKey()
-        result = cv2.matchTemplate(img, template, cv2.TM_SQDIFF_NORMED)
-        locations = np.where(result <= .001)
-        locations = list(zip(*locations[::-1]))
-        if len(locations) > 0:
-            return True
-        return False
-
     
     def scan_age(self, flip = False):
         img = self.screenshot
@@ -533,11 +489,11 @@ class GameVision(object):
         template4 = cv2.imread('AgeOfWarAI/assets/misc/age4base.png')
         template5 = cv2.imread('AgeOfWarAI/assets/misc/age5base.png')
 
-        img = img[700:,600:]
+        img = img[350:,400:]
         if flip:
             img = cv2.flip(img,1)
         
-        img = img[:,:-1600]
+        img = img[:,:-1000]
         result = self.get_position(img, template1, 0.70)
         #self.visualize_locations(img , result)
         if len(result)>=1:

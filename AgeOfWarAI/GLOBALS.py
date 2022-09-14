@@ -1,11 +1,11 @@
 GLOBAL_VALUES = {
-    "experience":[4000,14000,45000,200000, None],
+    "experience":[4000,14000,45000,200000, 10000000],
     "turret_slots":[1000,3000,7500,None],
-    "restart":(1300,640),
-    "play":(1300,450),
-    "diff1":(1300, 370),
-    "diff2":(1300, 450),
-    "diff3":(1300, 530),
+    "restart":(900,640),
+    "play":(900,310),
+    "diff1":(900, 260),
+    "diff2":(900, 313),
+    "diff3":(900, 356),
     "troops":[
         {
 
@@ -68,21 +68,21 @@ GLOBAL_VALUES = {
         },
     ],
     "mouse_values":{
-        "back":(1850,115),
-        "special":(1800,200),
-        "tier1":(1550,100),
-        "tier2":(1620,100),
-        "tier3":(1675,100),
-        "tier4":(1745,100),
-        "train_units":(1520,100),
-        "get_turret":(1600,100),
-        "sell_turret":(1675,100),
-        "buy_spot":(1750,100),
-        "evolve":(1820,100),
-        "turret_spot0":(800,700),
-        "turret_spot1":(800,620),
-        "turret_spot2":(800,530),
-        "turret_spot3":(800,440)
+        "back":(1270,90),
+        "special":(1230,150),
+        "tier1":(1060,90),
+        "tier2":(1110,90),
+        "tier3":(1160,90),
+        "tier4":(1210,90),
+        "train_units":(1050,100),
+        "get_turret":(1100,100),
+        "sell_turret":(1150,100),
+        "buy_spot":(1200,100),
+        "evolve":(1250,100),
+        "turret_spot0":(575,465),
+        "turret_spot1":(575,410),
+        "turret_spot2":(575,350),
+        "turret_spot3":(575,300)
 
     }
 }

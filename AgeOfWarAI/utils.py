@@ -14,15 +14,14 @@ class WindowManagement(object):
         window = self.windows[number]
         window.move(-window.left, -window.top)
         # window.resize(-window.size[0]+1800,-window.size[1]+600)
-        window.resize(-window.size[0]+2600,-window.size[1]+900)
+        window.resize(-window.size[0]+1800,-window.size[1]+600)
         pyautogui.click(300,50)
 
 
     def screenshot(self, image_title = '0'):
 
-        im = pyautogui.screenshot(region=(0,0,2600,885))
+        im = pyautogui.screenshot(region=(0,0,1800,600))
         opencvImage = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
-        #cv2.imwrite(f'{image_title}.png', opencvImage)
         return opencvImage
 
     def defocus_window(self, number=0):
@@ -45,5 +44,6 @@ def plot_graph(values):
 if __name__ == "__main__":
     a = WindowManagement()
     a.focus_window()
+    a.screenshot("ce")
     get_mouse_position()
 

@@ -2,6 +2,7 @@ from utils import *
 from game_environment import Env
 from game_vision import GameVision
 from neat_program import NeatClass
+from proximal_policy import ProximalPolicy
 from time import time
 from GLOBALS import GLOBAL_VALUES
 import time
@@ -12,7 +13,7 @@ import math
 # 4 windows would mean an action per second which should be enough
 
 class Master(object):
-
+    ppo = False
     number_windows = 1
     wm = None
     ocr = None
@@ -23,11 +24,11 @@ class Master(object):
 
     scans = 0
 
-    def __init__(self, number_windows = 1, difficulty = 1) -> None:
+    def __init__(self, number_windows = 1, difficulty = 1, ppo = False) -> None:
 
         self.number_windows = number_windows
         self.wm = WindowManagement()
-
+        self.ppo = ppo
         ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False) # need to run only once to download and load model into memory
         self.ocr = ocr
 
@@ -123,149 +124,35 @@ class Master(object):
         if ended:
             victory = gm.check_victory()
             return victory, True
-
+      
+        player_age_index = gm.scan_age(flip = False)
+        in_train = gm.scan_training()
+        gm.initial_scan_health()
+    
+        player_health, enemy_health = gm.scan_health() # not meaningful time
         
-        
-        if env.check_ability_time() > 6.5 :
-            player_age_index = gm.scan_age(flip = False)
-            in_train = gm.scan_training()
-            gm.initial_scan_health()
-            player_health, enemy_health = gm.scan_health() # not meaningful time
-            if player_health == None or enemy_health == None:
-                player_health = env.hp
-                enemy_health = env.enemy_hp
-            enemy_age_index = gm.scan_age(flip = True)
-        else:
-            player_age_index = env.age
-            in_train = 0
+        if player_health == None or enemy_health == None:
             player_health = env.hp
             enemy_health = env.enemy_hp
-            enemy_age_index = env.enemy_age
 
-        money, xp = gm.scan_money_and_xp(env) 
-        
+        enemy_age_index = gm.scan_age(flip = True)
+        time1 = time.time()
+        money, xp, p_troops, e_troops, battle_place = gm.scan_money_and_xp(env) 
+        print(f"{time.time() - time1} TIME FOR XP AND TROOPS {battle_place} enemy age {enemy_age_index}")
         ability = env.check_ability_avalability()
 
-        Error = gm.scan_cancel()
-        if Error:
-            pyautogui.click(1675,100)
         if player_age_index != None:
             env.age = player_age_index
 
-        max_player = 1
-        max_enemy = 0
-        enemy_troops_total = [0,0,0,0]
-        player_troops_total = [0,0,0,0]
+        if enemy_age_index != None:
+            env.enemy_age = enemy_age_index
 
-
-        if env.player_aged_recently > 0:
-            # also checks for troops from previous age
-            env.player_aged_recently -= 1 
-            try:
-                arr1,arr2 = gm.scan_troops(False, env.age, True)
-            except:
-                arr1 = [0,0,0,0]
-                arr2 = [0,0,0,0]
-            if gm.maximum != 0:
-                max_player = gm.maximum / gm.width
-                gm.maximum = 0
-            
-            player_troops_total = list()
-            for i in range(3):
-                player_troops_total.append(arr1[i] + arr2[i])
-
-            if env.age == 5:
-                player_troops_total.append(arr2[3])
-            else:
-                player_troops_total.append(0)
-        else:
-            arr1 = gm.scan_troops(False, env.age, False)
-            if gm.maximum != 0:
-                max_player = gm.maximum / gm.width
-                gm.maximum = 0
-
-            player_troops_total = arr1
-
-            if env.age != 5:
-                player_troops_total.append(0)
-
-
-        if env.enemy_aged_recently > 0:
-            env.enemy_aged_recently -= 1
-            try:
-                arr1,arr2 = gm.scan_troops(True, env.enemy_age, True)
-            except:
-                arr1=[0,0,0,0]
-                arr2=[0,0,0,0]
-            if gm.maximum != -0:
-                max_enemy = gm.maximum / gm.width
-                gm.maximum = 0
-
-                enemy_troops_total = list()
-                for i in range(3):
-                    enemy_troops_total.append(arr1[i] + arr2[i])
-
-                if env.enemy_age == 5:
-                    enemy_troops_total.append(arr2[3])
-                else:
-                    enemy_troops_total.append(0)
-          
-            
-        else:
-            arr1 = gm.scan_troops(True, env.enemy_age, False)
-            if gm.maximum != -0:
-                max_enemy = gm.maximum / gm.width
-                gm.maximum = 0
-
-            enemy_troops_total = arr1
-            
-            if env.enemy_age != 5:
-                enemy_troops_total.append(0)
-       
-                
-
-        battle_place = min(max_player, 1-max_enemy)
-      
+        enemy_troops_total = e_troops
+        player_troops_total = p_troops
 
         slots_available = env.available_slots
-
         turrets = env.turrets
 
-        new_turrets = list()
-        for turret in turrets:
-            tier,turr_age = turret[0], turret[1]
-            
-            if turr_age != 0:
-                sig_tier = self.stable_sigmoid(tier)
-                new_turrets.append(sig_tier) # turret exists
-                if turr_age == env.age:
-                    new_turrets.append(1)
-                else:
-                    new_turrets.append(-1)
-            else:
-                new_turrets.append(0)
-                new_turrets.append(0)
-
-        
-        age = [0,0,0,0,0]
-        age[env.age-1] = 1
-     
-        
-
-        if env.enemy_age != enemy_age_index:
-            env.enemy_age = enemy_age_index
-            env.enemy_aged_recently = 5
-
-        enemy_age = [0,0,0,0,0]
-        if enemy_age_index == None:
-            enemy_age_index = env.age
-            
-        enemy_age[enemy_age_index-1] = 1
-
-        #self.wm.defocus_window(window_num)
-        time2 = time.time()
-
-  
         data_packet = [
             ["number of troops in training", in_train],
             ["player hp percent", player_health],
@@ -277,10 +164,9 @@ class Master(object):
             ["player troops", player_troops_total],
             ["enemy troops",enemy_troops_total],
             ["available slots", slots_available],
-            ["player age", age],
-            ["enemy age",enemy_age],
+            ["player age", env.age],
+            ["enemy age",env.enemy_age],
             ["enemy age recently", env.enemy_aged_recently],
-            ["new turrets", new_turrets],
             ["turrets", turrets],
         ]
         env.hp = player_health
@@ -291,33 +177,21 @@ class Master(object):
         env.money = money
         env.xp = xp
 
-        money = money / tier3_cost
-
         divider =  GLOBAL_VALUES["experience"][env.age-1]
-        if divider == None:
-            xp = 0
-        else:
-            xp = xp / divider
 
         if ability == True:
             ability = 1
         else:
             ability = 0
 
-        total_troops = np.sum(player_troops_total)
-
-        in_train = np.tanh(in_train)
-        player_troops_total = np.tanh(player_troops_total)
-        enemy_troops_total = np.tanh(enemy_troops_total)
-        slots_available = np.tanh(slots_available)
-
-        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
+        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, slots_available, env.total_slots, env.age, env.enemy_age, turrets)
+        print(len(inputs))
         data_packet.append(["inputs in network", inputs])
         self.data[window_num] = data_packet
         # if self.scans % 25 == 0:
         #     self.save_data_packets(window_num)
         self.scans += 1
-        return inputs, False, total_troops
+        return inputs, False
         
 def run():
     number_of_windows = 1
@@ -334,7 +208,18 @@ def run_unity():
     #neats.main_unity()
     neats.main_unity_split()
 
+def run_proximal_policy():
+    number_of_windows = 1
+    difficulty = 2
+    
+    master = Master(number_of_windows, difficulty, True)
+    neats = ProximalPolicy(master.envs)
+    neats.master = master
+    
+    neats.main()
+
 if __name__ == "__main__":
-    run_unity()
+    # run_unity()
+    run()
 
 

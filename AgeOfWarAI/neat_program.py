@@ -1,6 +1,4 @@
 
-from ast import Global
-from audioop import add
 import neat
 import time
 import numpy as np
@@ -238,8 +236,61 @@ class NeatClass(object):
 
         self.generation += 1
     
-    def run_winner(self, config_file, winner):
+    def process_data_neat_split(self, inputs):
+        new_inputs = list()
 
+        in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, slots_available, total_slots, age_index, enemy_age_index, turrets = inputs
+
+        tier3_cost = GLOBAL_VALUES["troops"][age_index]["tier3"]
+
+        t4_val = money / 150000
+        money = money / tier3_cost
+
+        divider =  GLOBAL_VALUES["experience"][age_index-1]
+        xp = xp/divider
+
+        in_train = np.array(in_train)/5
+        print(f"PLAYER TOT {player_troops_total} {enemy_troops_total}")
+        t4_troops = player_troops_total[3]
+
+ 
+        player_troops_total = np.array(player_troops_total)/5.0
+        enemy_troops_total = np.array(enemy_troops_total)/5.0
+          
+        
+   
+        battle_place = battle_place * 5
+
+        money = money + 1
+        money = np.log(min(money, 50))
+        xp = np.log(min(xp + 1, 20))
+        new_turrets = list()
+
+        for turret in turrets:
+            tier,turr_age = turret[0], turret[1]
+            
+            if turr_age != 0:
+                tier -= 1
+                sig_tier = np.tanh(tier)
+                new_turrets.append(sig_tier) # turret exists
+
+                if turr_age == age_index:
+                    new_turrets.append(turr_age)
+                else:
+                    new_turrets.append(-1)
+            else:
+                new_turrets.append(0)
+                new_turrets.append(0)
+
+        age = [0,0,0,0,0]
+        age[age_index] = 1
+        enemy_age = [0,0,0,0,0]
+        enemy_age[enemy_age_index] = 1
+        new_inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)        
+        return new_inputs
+
+
+    def run_winner(self, config_file, winner):
         config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                             neat.DefaultSpeciesSet, neat.DefaultStagnation,
                             config_file)
@@ -264,8 +315,8 @@ class NeatClass(object):
             env = self.envs[0]
             env.focus()
             env.printing = True
-            inputs, ended, total = env.get_inputs()
-      
+            inputs, ended = env.get_inputs()
+            inputs = self.process_data_neat_split(inputs)
             if ended:
                 if inputs == True:
                     print("AI WON")
@@ -280,21 +331,26 @@ class NeatClass(object):
 
             action = net.activate(inputs)
             action = np.array(action)
-            self.master.data[env.assigned_window].append(action)
+           
 
-            action = stats.zscore(action)
-            action = self.softmax(action)
+            action1 = action[0:4] # troop actions
+            action2 = action[4:12] # turret actions
+            action3 = action[12:14] # buy slot or not
+            action4 = action[14:16] # ability or not
+            action5 = action[16:18] # upgrade age or not
+            action6 = action[18:20] # upgrade age or not
 
-            population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-            action = choices(population, action)
+            print(action6)
+            action1 = np.argmax(action1)
+            action2 = np.argmax(action2)
+            action3 = np.argmax(action3)
+            action4 = np.argmax(action4)
+            action5 = np.argmax(action5)
+            action6 = np.argmax(action6)
             
-
             self.act += 1
-            if total > 6 and action[0] <= 3:
-                Taken = False
-            else:
-                Taken = env.take_action(*action)
-            print(Taken)
+      
+            Taken = env.actions_manager(action1, action2, action3, action4, action5, action6)
             print(f"TOTAL TIME {time.time() - time1}")
 
             if Taken == True:
@@ -371,189 +427,6 @@ class NeatClass(object):
         self.server = server
         communication_socket, address = self.server.accept()
         self.communication_socket = communication_socket
-
-
-    def run_winner_unity_split(self, config_file, winner):
-        #print("got to eval unity")
-        config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                            neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                            config_file)
-
-        with open(f"{winner}", "rb") as f:
-            genome = pickle.load(f)
-
-        net = neat.nn.FeedForwardNetwork.create(genome[1], config)
-        print("loaded network")
-      
-        finished = list()
-        fitnesses = list()
-        for i in range(self.env_batch_size):
-            finished.append(0)
-            fitnesses.append(0)
-
-        
-
-        while True :
-
-            #print(f"actions taken per batch {iter} with finished {finished_envs}")
-            message = self.receive_message(self.communication_socket)
-            #finished = message.count('*')
-            message = message.split('|')
-            #print(len(message))
-            #print(message)
-            '''
-            '', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 ', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 
-0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 '
-
-            '''
-            message = message[1:]
-            actions = ""
-            
-            
-            
-
-            for j in range(self.env_batch_size):
-                # processing the network i*50 + j and j environment
-                # processing inputs
-                mess = message[j] 
-                inp = False
-                if mess.count('*') != 0:
-                    inp = True
-                    if finished[j] == 0:
-                        finished[j] = 1
-                        print(f"FITNESS FOR {j} IS {fitnesses[j]}")
-
-                inp = True
-                mess = mess.split(' ')
-                #print(mess)
-                '''
-                ['', '0', 'php', '1.000', 'ehp', '1.000', 'mn', '17500', 'xp', '999999', 'bp', '0.500', 'ab', '1', 'ptrps', '0', '0', '0', '0', '', 'etrps', '0', '0', '0', '0', '', 'slots', '1', 'age', '1', 'eage', '1', 'turrets', '0', '0', '0', '0', '0', '0', '0', '0', '']
-                '''
-                player_agen = int(mess[29])
-                enemy_agen = int(mess[31])
-
-                in_train = int(mess[1])
-                player_health = float(mess[3])
-                enemy_health = float(mess[5])
-
-                
-
-                money = int(mess[7])
-                tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
-                money = money / tier3_cost
-                xp = int(mess[9])
-                original_xp = xp
-                divider =  GLOBAL_VALUES["experience"][player_agen-1]
-                if divider == None:
-                    xp = 0
-                else:
-                    xp = xp / divider
-                battle_place = float(mess[11])
-                ability = int(mess[13])
-                player_troops_total = [int(mess[15]), int(mess[16]), int(mess[17]), int(mess[18])]
-                enemy_troops_total = [int(mess[21]), int(mess[22]), int(mess[23]), int(mess[24])]
-                slots_available = int(mess[27])
-                turrets = [
-                    [int(mess[33]),int(mess[34])],
-                    [int(mess[35]),int(mess[36])],
-                    [int(mess[37]),int(mess[38])],
-                    [int(mess[39]),int(mess[40])],
-                ]
-                #processing data
-
-                new_turrets = list()
-                for turret in turrets:
-                    tier,turr_age = turret[0], turret[1]
-                    
-                    if turr_age != 0:
-                        sig_tier = np.tanh(tier)
-                        new_turrets.append(sig_tier) # turret exists
-                        if turr_age == player_agen:
-                            new_turrets.append(1)
-                        else:
-                            new_turrets.append(-1)
-                    else:
-                        new_turrets.append(0)
-                        new_turrets.append(0)
-
-                in_train = np.array(in_train)/5
-                player_troops_total = np.array(player_troops_total)/5
-                enemy_troops_total = np.array(enemy_troops_total)/5
-
-                # in_train = np.tanh(in_train)
-                # player_troops_total = np.tanh(player_troops_total)
-                # enemy_troops_total = np.tanh(enemy_troops_total)
-                # slots_available = np.tanh(slots_available)
-
-                age = [0,0,0,0,0]
-                age[player_agen-1] = 1
-
-                enemy_age = [0,0,0,0,0]
-                enemy_age[enemy_agen-1] = 1
-                tot_tr = np.sum(player_troops_total)
-
-
-                money = money + 1
-                money = np.log(min(money, 50))
-                xp = np.log(min(xp + 1, 20))
-
-                inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
-        
-                fitnesses[j] += 0.2 # reward because the game hasn't ended
-
-                #net = self.networks[network_num]
-                action = net.activate(inputs)
-                action = np.array(action)
-           
-
-                action1 = action[0:5] # troop actions
-                action2 = action[5:13] # turret actions
-                action3 = action[13:15] # buy slot or not
-                action4 = action[15:17] # ability or not
-                action5 = action[17:19] # upgrade age or not
-
-                if original_xp > 5000000 :
-                    # the ai hit a infinite loop so it will lose on purpose
-                    # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
-                    action2[3] += 100
-                    action2[4] += 100
-                    action2[5] += 100
-                    action2[6] += 100
-                    action1[4] += 100
-                    reset_hist = True
-
-                action1 = np.argmax(action1)
-                action2 = np.argmax(action2)
-                action3 = np.argmax(action3)
-                action4 = np.argmax(action4)
-                action5 = np.argmax(action5)
-                
-                # population = [0,1,2,3]
-                # action3 = stats.zscore(action3)
-                # action3 = self.softmax(action3)
-                # action3 = random.choices(population, action3)[0]
-                '''
-                action = np.argmax(action)
-                if np.isnan(val):
-                    action = 13
-                '''
-                
-                actions += f"{action1}{action2}{action3}{action4}{action5} "
-
-            time2 = time.time()
-            
-                
-            #print(actions)
-            #print(time2-time1)
-            self.communication_socket.send(f"{actions}".encode("utf-8"))
-            #print(finished)
-            if finished == 50:
-                break
-                   
-        self.generation += 1
-        return reset_hist
-    
-        
 
 
     def run_winner_unity(self, config_file, winner):
@@ -729,8 +602,8 @@ class NeatClass(object):
                    
         self.generation += 1
         return reset_hist
-    
-        #print("GOT TO THE END OF THE FUNCTION")
+
+
 
     def sample_action(self, action):
         lng = len(action)
@@ -902,8 +775,6 @@ class NeatClass(object):
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)
                     
                         network_num = i * self.env_batch_size + j
-                        # network_num = 138
-                         
                         net = self.networks[network_num]
 
                         if not add_fitness:
@@ -992,229 +863,7 @@ class NeatClass(object):
             print(f"A NUMBER OF {cnt_win} AI WON")
             reset_hist = True
 
-        return reset_hist
-
-
-    def eval_genomes_unity(self, genomes, config):
-        #print("got to eval unity")
-        self.POP_SIZE = len(genomes)
-        iterations_num = int(self.POP_SIZE / self.env_batch_size)
-
-        self.networks = list()
-        self.genomes_list = list()
-        reset_hist = False
-        
-        for g in genomes:
-            genome = g[1]
-            net = neat.nn.FeedForwardNetwork.create(genome, config)
-            self.networks.append(net) 
-            genome.fitness = 0
-            self.genomes_list.append(genome)
-      
-        
-        #print("after connect")
-        confidence_training = 1
-        for p in range (confidence_training):
-            # running the same generation more times to account for the stochasticity
-            for i in range( iterations_num ):
-                # training a batch of networks of 50
-                iter = 0
-                finished_envs = 0
-                finished_arr = list()
-                for j in range(self.env_batch_size):
-                    finished_arr.append(0)
-
-                while True :
-                    # training until all envs int the batch is finished
-                    time1 = time.time()
-                    iter += 1
-
-                    message = self.receive_message(self.communication_socket)
-                    finished = message.count('*')
-                    message = message.split('|')
-
-                    '''
-                    '', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 ', ' 0 php 1.000 ehp 1.000 mn 17500 xp 999999 bp 0.500 ab 1 ptrps 0 0 0 0  etrps 0 0 0 
-    0  slots 1 age 1 eage 1 turrets 0 0 0 0 0 0 0 0 '
-                    the structure of a message
-                    '''
-                    message = message[1:]
-                    actions = ""
-
-                    for j in range(self.env_batch_size):
-                        # processing the network i* self.env_batch_size + j and j environment
-                        # processing inputs
-                        mess = message[j] 
-                        inp = False
-                        add_fitness = False
-                        if mess.count('*') == 0:
-                            inp = True
-                            add_fitness = True
-                       
-                        
-                        if finished < 47:
-                            inp = False
-                        inp = False
-                        if inp:
-                            print(f"ENVIRONMENT IS {i * 50 + j}")
-                            pass
-                            
-                        
-                        mess = mess.split(' ')
-                        status = mess[-1]
-                        #print(mess)
-                        '''
-                        ['', '0', 'php', '1.000', 'ehp', '1.000', 'mn', '17500', 'xp', '999999', 'bp', '0.500', 'ab', '1', 'ptrps', '0', '0', '0', '0', '', 'etrps', '0', '0', '0', '0', '', 'slots', '1', 'age', '1', 'eage', '1', 'turrets', '0', '0', '0', '0', '0', '0', '0', '0', '']
-                        '''
-                        player_agen = int(mess[29])
-                        enemy_agen = int(mess[31])
-
-                        in_train = int(mess[1])
-                        player_health = float(mess[3])
-                        enemy_health = float(mess[5])
-
-                        
-
-                        money = int(mess[7])
-                        tier3_cost = GLOBAL_VALUES["troops"][player_agen]["tier3"]
-                        incentive = money / GLOBAL_VALUES["troops"][enemy_agen]["tier3"]
-                        money = money / tier3_cost
-                        xp = int(mess[9])
-                        original_xp = xp
-                        divider =  GLOBAL_VALUES["experience"][player_agen-1]
-                        if divider == None:
-                            xp = 0
-                        else:
-                            xp = xp / divider
-                        battle_place = float(mess[11])
-                        ability = int(mess[13])
-                        player_troops_total = [int(mess[15]), int(mess[16]), int(mess[17]), int(mess[18])]
-                        enemy_troops_total = [int(mess[21]), int(mess[22]), int(mess[23]), int(mess[24])]
-                        slots_available = int(mess[27])
-                        turrets = [
-                            [int(mess[33]),int(mess[34])],
-                            [int(mess[35]),int(mess[36])],
-                            [int(mess[37]),int(mess[38])],
-                            [int(mess[39]),int(mess[40])],
-                        ]
-                        #processing data
-
-                        new_turrets = list()
-                        for turret in turrets:
-                            tier,turr_age = turret[0], turret[1]
-                            
-                            if turr_age != 0:
-                                sig_tier = np.tanh(tier)
-                                new_turrets.append(sig_tier) # turret exists
-                                if turr_age == player_agen:
-                                    new_turrets.append(1)
-                                else:
-                                    new_turrets.append(-1)
-                            else:
-                                new_turrets.append(0)
-                                new_turrets.append(0)
-
-                        in_train = np.tanh(in_train)
-
-                        player_troops_total = np.array(player_troops_total)/3
-                        enemy_troops_total = np.array(enemy_troops_total)/3
-
-                        player_troops_total = np.tanh(player_troops_total)
-                        enemy_troops_total = np.tanh(enemy_troops_total)
-                        slots_available = np.tanh(slots_available)
-
-                        age = [0,0,0,0,0]
-                        age[player_agen-1] = 1
-
-                        enemy_age = [0,0,0,0,0]
-                        enemy_age[enemy_agen-1] = 1
-                        tot_tr = np.sum(player_troops_total)
-
-                        inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, slots_available, *age, *enemy_age, *new_turrets)
-                
-                        network_num = i * self.env_batch_size + j
-                        
-
-                        if add_fitness:
-                            self.genomes_list[network_num].fitness += 0.2 # reward because the game hasn't ended
-                            self.genomes_list[network_num].fitness += 0.02 * np.tanh(incentive/5) # incetiving the ai to save money
-                        
-                        net = self.networks[network_num]
-
-                        if not add_fitness:
-                            if finished_arr[j] == 0 :
-                                if status == 2:
-                                    self.genomes_list[network_num].fitness += 10000
-                                finished_arr[j] = 1
-
-                        action = net.activate(inputs)
-                        action = np.array(action)
-
-                        if inp:
-                            #print(f"before process {action}")
-                            pass
-                        action = stats.zscore(action) * 1.5
-                        action = self.softmax(action)
-                        if inp:
-                            #print(f"after process {action}")
-                            pass
-                        population = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
-                        
-
-                        
-                        if original_xp > 5000000 :
-                            # the ai hit a infinite loop so it will lose on purpose
-                            # 11 10 9 8 13 heavily increasing probabilities for waiting and selling turrets
-                            action[8] += 10
-                            action[9] += 10
-                            action[10] += 10
-                            action[11] += 10
-                            action[13] += 10
-                            reset_hist = True
-
-                        val = action[np.argmax(action)]
-                        '''
-                        action = np.argmax(action)
-                        if np.isnan(val):
-                            action = 13
-                        '''
-                        if np.isnan(val):
-                            action = 13
-                        else:
-                            # action = np.argmax(action)
-                            action = choices(population, action)
-                            action = action[0]
-                        
-                        if inp:
-                            
-                            #print(action)
-                            pass
-                        
-                        if add_fitness and action == 13:
-                            self.genomes_list[network_num].fitness += 0.1
-
-                        actions += f"{action} "
-
-                    #print(actions)
-                    #print(time2-time1)
-                    self.communication_socket.send(f"{actions}".encode("utf-8"))
-                    #print(finished)
-                    if finished == self.env_batch_size:
-                        break
-
-        for i,g in enumerate(genomes):
-            genome = g[1]
-            #print(f"fitness for {i} is {genome.fitness}")
-            genome.fitness /= confidence_training
-
-        self.save_best(genomes)
-        self.generation += 1
-        reset_hist = False
-        return reset_hist
-    
-        #print("GOT TO THE END OF THE FUNCTION")
-                
-            
+        return reset_hist        
             
     def save_genome_from_generation(self, population, number, config_name):
         from neat.six_util import iteritems
@@ -1222,26 +871,16 @@ class NeatClass(object):
         local_dir = os.path.dirname(__file__)
         config_path = os.path.join(local_dir, f'{config_name}')
         
-
-
     def main(self):
         
         local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward.txt')
+        config_path = os.path.join(local_dir, 'config.txt')
 
         self.start_envs()
         #self.run(config_path, self.eval_genomes)
-        self.run_winner(config_path, "best")
+        self.run_winner(config_path, "winnergen66net138")
 
         # self.random_actions()
-    
-    def main_unity(self):
-        local_dir = os.path.dirname(__file__)
-        config_path = os.path.join(local_dir, 'config-feedforward.txt')
-
-        self.establish_connection()
-        self.run(config_path, self.eval_genomes_unity)
-        #self.run_winner_unity(config_path, "winner-generation 150")
     
     def main_unity_split(self):
         local_dir = os.path.dirname(__file__)
@@ -1249,18 +888,7 @@ class NeatClass(object):
 
         self.establish_connection()
         self.run(config_path, self.eval_genomes_unity_split_actions)
-        #self.run_winner_unity_split(config_path, "wn11")
         
-
-    def vis_winner(self):
-        winner = "winner-generation 19"
-        with open(f"{winner}", "rb") as f:
-            genome = pickle.load(f)
-
-        winner = genome
-        print(winner[1].fitness)
-        visualize.draw_net(config, winner[1], True)
-
 
     def run(self, config_file, eval_func):
         
