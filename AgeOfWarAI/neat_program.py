@@ -24,7 +24,7 @@ class NeatClass(object):
     networks = list()
     POP_SIZE = None
     inactive_envs = list()
-    generation = 0
+    generation = 57
     master = None
     valid_actions_streak = list()
     generations_fitnesses = list()
@@ -250,7 +250,7 @@ class NeatClass(object):
         xp = xp / divider
 
         in_train = np.array(in_train)/5
-        print(f"PLAYER TOT {player_troops_total} {enemy_troops_total}")
+  
         t4_troops = player_troops_total[3]
 
  
@@ -284,7 +284,7 @@ class NeatClass(object):
         age[age_index-1] = 1
         enemy_age = [0,0,0,0,0]
         enemy_age[enemy_age_index-1] = 1
-        new_inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets)        
+        new_inputs = [in_train, player_health, enemy_health, money, xp, battle_place, ability, *player_troops_total, *enemy_troops_total, t4_troops, t4_val, slots_available, *age, *enemy_age, *new_turrets]        
         return new_inputs
 
     def preprocess_turrets(self, turrets):
@@ -326,7 +326,10 @@ class NeatClass(object):
             env.focus()
             env.printing = True
             inputs, ended = env.get_inputs()
+            print(inputs)
             inputs = self.process_data_neat_split(inputs)
+            inputs[5] -= 1
+            inputs[5] = max(inputs[5],0)
             print(inputs)
             if ended:
                 if inputs == True:
@@ -344,23 +347,22 @@ class NeatClass(object):
             action = np.array(action)
            
 
-            action1 = action[0:4] # troop actions
-            action2 = action[4:12] # turret actions
-            action3 = action[12:14] # buy slot or not
-            action4 = action[14:16] # ability or not
-            action5 = action[16:18] # upgrade age or not
-            action6 = action[18:20] # upgrade age or not
-
+            action1 = action[0:7] # troop actions
+            action2 = action[7:15] # turret actions
+            action3 = action[15:17] # buy slot or not
+            action4 = action[17:19] # ability or not
+            action5 = action[19:21] # upgrade age or not
+            action6 = action[21:24] # create super soldier or not
             print(action6)
+          
             action1 = np.argmax(action1)
             action2 = np.argmax(action2)
             action3 = np.argmax(action3)
             action4 = np.argmax(action4)
             action5 = np.argmax(action5)
             action6 = np.argmax(action6)
-            
+            print([action1,action2,action3,action4,action5,action6])
             self.act += 1
-      
             Taken = env.actions_manager(action1, action2, action3, action4, action5, action6)
             print(f"TOTAL TIME {time.time() - time1}")
 
@@ -451,7 +453,7 @@ class NeatClass(object):
     def eval_genomes_unity_split_actions(self, genomes, config):
         #print("got to eval unity")
 
-     
+        
         self.POP_SIZE = len(genomes)
         iterations_num = int(self.POP_SIZE / self.env_batch_size)
 
@@ -516,7 +518,7 @@ class NeatClass(object):
                         
                         if finished < 45:
                             inp = False
-                        #inp = False
+                        inp = False
                         if inp:
                             print(f"ENVIRONMENT IS {i * 50 + j}")
                             pass
@@ -557,12 +559,15 @@ class NeatClass(object):
                         ]
                         total_slots = int(mess[41])
                         #processing data
-                        # note that turret tiers for original game are 1 2 3 while unity turrets are 0 1 2
+                        # note that turret tiers for original game are 1 2 3 while unity turrets are 0 1 2 so we need to preprocess them
                         turrets = self.preprocess_turrets(turrets)
                         inputs = (in_train, player_health, enemy_health, money, xp, battle_place, ability, player_troops_total, enemy_troops_total, slots_available, total_slots, player_agen, enemy_agen, turrets)
                         inputs = self.process_data_neat_split(inputs)
+                      
                         network_num = i * self.env_batch_size + j
+                        #network_num = 0
                         net = self.networks[network_num]
+                        
 
                         if not add_fitness:
                             if finished_arr[j] == 0 :
@@ -665,7 +670,7 @@ class NeatClass(object):
 
         self.start_envs()
         #self.run(config_path, self.eval_genomes)
-        self.run_winner(config_path, "winnergen66net138")
+        self.run_winner(config_path, "winner-generation 57")
 
         # self.random_actions()
     
@@ -692,7 +697,7 @@ class NeatClass(object):
 
         p = neat.Population(config)
 
-       # p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-65")
+        p = neat.Checkpointer.restore_checkpoint("neat-checkpoint-56")
      
         p.add_reporter(neat.StdOutReporter(True))
         

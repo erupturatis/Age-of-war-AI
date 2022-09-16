@@ -250,19 +250,33 @@ class Env(object):
         ]
 
     def actions_manager(self, action1, action2, action3, action4, action5, action6):
-        if action1 == 0:
-            self.take_action(13)
-        elif action1 == 3:
-            self.take_action(0)
-        elif action1 == 1:
-            self.take_action(1)
-        elif action1 == 2:
-            self.take_action(2)
+        from AgeOfWarAPI import take_action
+
 
         if action6 == 0:
             self.take_action(13)
         elif action6 == 1:
             self.take_action(3)
+        elif action6 == 2:
+            self.take_action(13) # I made a mistake when training the ai
+
+
+        if action1 == 0:
+            self.take_action(13)
+        elif action1 == 1:
+            take_action(0)
+        elif action1 == 2:
+            take_action(1)
+        elif action1 == 3:
+            take_action(2)
+        elif action1 == 4:
+            take_action(19)
+        elif action1 == 5:
+            take_action(20)
+        elif action1 == 6:
+            take_action(21)
+
+        
 
         if action2 == 0:
             self.take_action(13)

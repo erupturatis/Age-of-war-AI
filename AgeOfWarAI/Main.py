@@ -151,7 +151,7 @@ class Master(object):
         player_troops_total = p_troops
 
         slots_available = env.available_slots
-        turrets = env.turrets
+        turrets = env.turrets.copy()
 
         data_packet = [
             ["number of troops in training", in_train],
@@ -219,7 +219,7 @@ def run_proximal_policy():
     neats.main()
 
 if __name__ == "__main__":
-    # run_unity()
     run_unity()
+    #run()
 
 
