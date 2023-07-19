@@ -9,11 +9,11 @@ Age of war AI, a project that I spent an abhorent amount of time on, that turned
 - Simulate 50 environments in unity with 10x speed and make them communicate via TCP with my python script that now had a GOD neat manager for all those environments and their respective actions. Here I actually started seeing some significant results and strategies developing and managing to win on NORMAL mode yay. But I wanted moe
 - Switch up completely on unity ml agents essentially abandoning the python script, train and agent with PPO and get it after tons of switching up parameters and its functions get it to have quite a good strategy that wins the game on HARD mode
 - Test it on the original game and record it winning and realise you lost 2 months on a project that could have been finished in under 3 weeks
-- Still make a [visualization library]("https://github.com/erupturatis/Neat-Manim") for NEAT using the mathematical engine MANIM because I found some cool youtube videos on the topic that didn't publish their repositories
+- Still make a [visualization library](https://github.com/erupturatis/Neat-Manim) for NEAT using the mathematical engine MANIM because I found some cool youtube videos on the topic that didn't publish their repositories
 
 
 
-You can see the overview of this pain [here]("https://www.youtube.com/watch?v=cfAbN8-P_yM") - I will come back 100% to this channel to get it to at least 1M but for now I have other goals to pursue.
+You can see the overview of this pain [here](https://www.youtube.com/watch?v=cfAbN8-P_yM) - I will come back 100% to this channel to get it to at least 1M but for now I have other goals to pursue.
 
 *Running on python 3.7.9*
 
